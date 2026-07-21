@@ -1,0 +1,40 @@
+# Journal - mj (Part 1)
+
+> AI development session journal
+> Started: 2026-07-17
+
+---
+
+
+
+## Session 1: Rust foundation contracts
+
+**Date**: 2026-07-21
+**Task**: Rust foundation contracts
+**Branch**: `main`
+
+### Summary
+
+Added the pinned Rust workspace, canonical protocol/session contracts, deterministic model and compatibility catalogs, test support, dependency policy, and isolated Rust CI; all Rust and npm checks pass.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `26ab7525` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
