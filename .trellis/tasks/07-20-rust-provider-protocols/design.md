@@ -54,6 +54,33 @@ Once a stream begins, failures are represented through the canonical terminal as
 
 Tool-call JSON is accumulated incrementally. Malformed or truncated arguments remain a failed tool call and are never converted into an apparently executable call. Output-limit responses cannot expose a truncated tool call as valid.
 
+## Foundation Interface Refinements
+
+The completed foundation deliberately exposed only the smallest object-safe boundary. Before transport work, this child extends that boundary without adding provider behavior to `pi-model`:
+
+- `Cancellation` gains a wakeable cancellation future or equivalent waker registration. Polling `is_cancelled()` alone cannot interrupt a pending connect/body read and is insufficient for the provider contract.
+- `ModelRequest` gains a typed options object for maximum output, temperature, thinking/reasoning settings, and protocol-neutral request controls found in the selected TypeScript adapters.
+- `ModelServiceError.category` becomes a closed normalized category. Errors carry optional HTTP status, provider code, and `retry_after_ms`; public formatting remains redacted.
+- Immutable `ProviderAdapterConfig` in `pi-provider` owns the resolved base URL, synthetic/real authorization value, explicit headers, proxy, and timeout policy. Adapters never read environment variables or user files.
+- Started-stream failures still terminate through the canonical assistant/error event path; only configuration/connect failures before stream creation return the outer service error.
+
+These are refinements of the foundation contract, not compatibility shims. No backward-compatibility layer is retained during the unpublished Rust migration.
+
+## Dependency Decision
+
+The first implementation pass uses these exact direct dependencies after lockfile and license review:
+
+| Crate | Version/features | Purpose and review |
+| --- | --- | --- |
+| `reqwest` | `=0.13.4`, default features off; `rustls`, `http2`, `system-proxy`, `stream`, `json`, `gzip`, `brotli`, `deflate` | Shared streaming HTTP client, decompression, explicit/system proxy support, platform-root verification; excludes native-tls/OpenSSL |
+| `tokio` | `=1.53.1`; `macros`, `rt-multi-thread`, `sync`, `time`, `net`, `io-util` | Cancellation-aware network/test runtime and timeout orchestration |
+| `futures-util` | `=0.3.33`; default features | Stream combinators without another async abstraction layer |
+| `bytes` | `=1.12.1` | Incremental bounded body/SSE buffers |
+| `base64` | `=0.22.1` | Provider image encoding |
+| `httpdate` | `=1.0.3` | Standards-compatible `Retry-After` date parsing |
+
+`reqwest`'s reviewed Rustls path currently selects AWS-LC through Rustls and therefore introduces native C/assembly build code even though it avoids OpenSSL. The implementation gate must record this in `rust/DEPENDENCIES.md`, review the complete lockfile/license graph, and document any unavoidable `cargo-deny` duplicate-version exception with an owning dependency path. No `async-trait`, SSE parser crate, provider SDK, secret crate, or general retry crate is added: object-safe boxed futures, the shared incremental parser, a small redacting secret wrapper, and runtime-owned retry scheduling cover those needs.
+
 ## Protocol Responsibilities
 
 ### OpenAI Chat Completions
