@@ -2,7 +2,7 @@
 
 ## Status and Dependency Gate
 
-Planning design only. `../07-20-rust-foundation-contracts` must be `complete` before this child can start. The dependency must be checked from task state; directory position is not sufficient.
+Planning was reviewed and accepted on 2026-07-21. `../archive/2026-07/07-20-rust-foundation-contracts` is verified `completed`. This child remains in `planning` during the current planning-only workflow and may start only after `trellis-before-dev` loads the implementation context.
 
 ## Evidence and Compatibility Oracle
 
@@ -136,6 +136,10 @@ Each real protocol uses a local server that records the request and emits script
 - chunk splits at every important parser boundary.
 
 Fixtures are synthetic, credential-free, and normalized only for approved IDs/timestamps/headers. No CI test contacts a public endpoint.
+
+## Task Decomposition Decision
+
+Keep the provider protocols in one child task. The four network adapters share the same interface refinement, HTTP client, SSE parser, error model, cancellation behavior, and final cross-protocol conformance matrix, so nested task boundaries would split one coupled compatibility surface. Implementation Steps 1 through 9 remain explicit, independently verified rollback gates; no later adapter starts before the preceding shared gate passes, and no partial adapter set is advertised as complete.
 
 ## Important Trade-offs
 

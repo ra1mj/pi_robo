@@ -2,7 +2,7 @@
 
 ## Gate
 
-Do not start until `rust-foundation-contracts` is `complete`, this child's PRD/design/plan are reviewed, and `trellis-before-dev` has loaded current project specs. Inline implementation and checking only.
+The archived `rust-foundation-contracts` dependency is verified `completed`, and this child's PRD/design/plan were reviewed and accepted on 2026-07-21. Do not start until the workflow enters implementation and `trellis-before-dev` has loaded current project specs. Inline implementation and checking only.
 
 ## Step 1: Refine Foundation Interfaces and Lock Dependencies
 

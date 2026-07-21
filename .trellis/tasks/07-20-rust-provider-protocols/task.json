@@ -21,6 +21,6 @@
   "children": [],
   "parent": "07-17-rust-rewrite",
   "relatedFiles": [],
-  "notes": "",
+  "notes": "Planning reviewed and accepted on 2026-07-21. The archived rust-foundation-contracts dependency is verified completed. Ready for task.py start when the workflow enters implementation; trellis-before-dev remains mandatory.",
   "meta": {}
 }

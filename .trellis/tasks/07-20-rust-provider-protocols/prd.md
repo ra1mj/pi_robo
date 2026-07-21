@@ -7,12 +7,12 @@ Implement the five milestone-1 provider protocol adapters behind the canonical R
 ## Requirements
 
 - Parent task: `../07-17-rust-rewrite`.
-- Dependency: `../07-20-rust-foundation-contracts` must be `complete` before this task starts.
+- Dependency: `../archive/2026-07/07-20-rust-foundation-contracts` is verified `completed`; this remains the hard prerequisite for task start.
 - Implement OpenAI Chat Completions, OpenAI Responses, Anthropic Messages, Google Generative Language, and Faux adapters.
 - Cover request mapping, streamed event decoding, tool calls/results, text and image content, usage, stop reasons, cancellation, retry classification, and normalized errors.
 - Keep provider credentials and model selection outside adapter internals; accept resolved configuration through explicit interfaces.
 - Use local HTTP/SSE fixtures for the required test matrix. Live-provider smoke tests require separate explicit authorization and credentials.
-- Add `design.md` and `implement.md` for this child and obtain review before `task.py start`.
+- `design.md` and `implement.md` were reviewed and accepted on 2026-07-21; `task.py start` remains deferred until the workflow enters implementation.
 
 ## Acceptance Criteria
 
