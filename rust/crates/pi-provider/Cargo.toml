@@ -1,0 +1,15 @@
+[package]
+name = "pi-provider"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+pi-model = { workspace = true }
+pi-protocol = { workspace = true }
+
+[lints]
+workspace = true

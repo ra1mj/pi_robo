@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "m1.protocol.messages",
+      "milestone": "M1",
+      "area": "protocol",
+      "owner": "pi-protocol",
+      "oracle": "packages/ai/src/types.ts",
+      "fixture": "rust/fixtures/protocol/messages.json",
+      "runner": "rust/crates/pi-protocol/tests/contracts.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.protocol.assistant-events",
+      "milestone": "M1",
+      "area": "protocol",
+      "owner": "pi-protocol",
+      "oracle": "packages/ai/src/types.ts",
+      "fixture": "rust/fixtures/protocol/assistant-events.json",
+      "runner": "rust/crates/pi-protocol/tests/contracts.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.session.v3-preservation",
+      "milestone": "M1",
+      "area": "session",
+      "owner": "pi-protocol",
+      "oracle": "packages/coding-agent/src/core/session-manager.ts",
+      "fixture": "rust/fixtures/sessions/session-v3.jsonl",
+      "runner": "rust/crates/pi-protocol/tests/contracts.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.model.catalog",
+      "milestone": "M1",
+      "area": "model-catalog",
+      "owner": "pi-model",
+      "oracle": "packages/ai/src/models.generated.ts",
+      "fixture": "rust/assets/models.json",
+      "runner": "rust/crates/pi-protocol/tests/contracts.rs",
+      "normalizers": [],
+      "state": "verified"
+    }
+  ]
+}

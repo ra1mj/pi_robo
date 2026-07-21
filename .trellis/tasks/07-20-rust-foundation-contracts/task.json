@@ -3,7 +3,7 @@
   "name": "rust-foundation-contracts",
   "title": "Rust foundation and compatibility contracts",
   "description": "Create the pinned Rust workspace, shared compatibility contracts, model catalog, fixtures, and dependency-policy baseline.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

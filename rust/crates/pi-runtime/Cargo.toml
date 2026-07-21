@@ -1,0 +1,19 @@
+[package]
+name = "pi-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+pi-agent = { workspace = true }
+pi-model = { workspace = true }
+pi-protocol = { workspace = true }
+pi-resources = { workspace = true }
+pi-store = { workspace = true }
+pi-tools = { workspace = true }
+
+[lints]
+workspace = true

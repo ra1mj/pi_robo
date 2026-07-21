@@ -18,12 +18,12 @@ Create the pinned Rust workspace, compatibility contracts, catalog artifacts, an
 
 ## Acceptance Criteria
 
-- [ ] The pinned workspace and all declared crates pass their scoped formatting, lint, type, and unit checks.
-- [ ] Contract round-trip tests cover representative messages, tools, usage, provider errors, and session-v3 entries.
-- [ ] Unknown session-v3 fields survive parse and serialize tests.
-- [ ] The compatibility catalog is validated in CI and rejects duplicate or unowned contract entries.
-- [ ] Fixture helpers can run deterministically without network access or provider credentials.
-- [ ] Dependency, license, and unsafe-code policies fail closed with documented exceptions.
+- [x] The pinned workspace and all declared crates pass their scoped formatting, lint, type, and unit checks.
+- [x] Contract round-trip tests cover representative messages, tools, usage, provider errors, and session-v3 entries.
+- [x] Unknown session-v3 fields survive parse and serialize tests.
+- [x] The compatibility catalog is validated in CI and rejects duplicate or unowned contract entries.
+- [x] Fixture helpers can run deterministically without network access or provider credentials.
+- [x] Dependency, license, and unsafe-code policies fail closed with documented exceptions.
 
 ## Out of Scope
 

@@ -1,0 +1,16 @@
+{
+  "defaultProvider": "openai",
+  "defaultModel": "example",
+  "transport": "auto",
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 16384
+  },
+  "terminal": {
+    "showImages": true,
+    "imageWidthCells": 60
+  },
+  "futureSetting": {
+    "enabled": true
+  }
+}

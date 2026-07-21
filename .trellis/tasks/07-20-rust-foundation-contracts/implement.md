@@ -165,3 +165,15 @@ If a TypeScript test file is created or modified, run that exact test with the r
 ## Handoff
 
 Do not commit unless the user asks. On completion, leave the next three children (`rust-provider-protocols`, `rust-agent-tools`, and `rust-data-resources`) blocked only by this child's status and provide the evidence needed to mark this child `complete`.
+
+Downstream Rust tasks must read `.trellis/spec/pi-ai/backend/rust-foundation-contracts.md` before changing contracts, catalogs, fixtures, or crate dependencies.
+
+## Completion Evidence
+
+- Workspace/toolchain: `cargo check --workspace --all-targets --locked` passed for all ten crates on Rust 1.97.0.
+- Contracts: `contracts.rs` covers messages, tool calls/results, usage, provider error events, settings, every current session-v3 entry kind, malformed records, unknown fields, and unknown record kinds.
+- Test support: deterministic clock/IDs/sleeps, cancellation, bounded sink, in-memory store, fixture confinement and credential scan, explicit normalization, and loopback HTTP tests passed.
+- Catalogs: the offline model artifact contains 35 providers and 1072 models. Two consecutive generations retained SHA-256 `6bc576d58067657105a27bd3b7ad6f0e308cabcba6a40b2b08ea18304dd85bb6`; drift check passed.
+- Policy: workspace-edge validation, fail-closed compatibility validation, locked Clippy/tests, rustdoc warnings, and `cargo deny check` passed with no exceptions.
+- Existing project: `npm run check` passed, including the original TypeScript checks and the new offline catalog drift check. No npm bin, release workflow, TypeScript runtime path, user-data path, or existing `pi` executable changed.
+- Rollback boundary: remove the new root Cargo/policy files and `rust/**`, then revert only the AI/root catalog scripts and the additive Rust CI job. Existing TypeScript check stages are unchanged and passed independently before the added catalog check.

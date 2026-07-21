@@ -1,0 +1,11 @@
+{"type":"session","version":3,"id":"session-1","timestamp":"2026-07-21T00:00:00.000Z","cwd":"/workspace","futureHeaderField":"preserved"}
+{"type":"message","id":"entry-1","parentId":null,"timestamp":"2026-07-21T00:00:01.000Z","message":{"role":"user","content":"hello","timestamp":1000},"futureEntryField":{"nested":true}}
+{"type":"thinking_level_change","id":"entry-2","parentId":"entry-1","timestamp":"2026-07-21T00:00:02.000Z","thinkingLevel":"high"}
+{"type":"model_change","id":"entry-3","parentId":"entry-2","timestamp":"2026-07-21T00:00:03.000Z","provider":"openai","modelId":"example"}
+{"type":"compaction","id":"entry-4","parentId":"entry-3","timestamp":"2026-07-21T00:00:04.000Z","summary":"summary","firstKeptEntryId":"entry-2","tokensBefore":100}
+{"type":"branch_summary","id":"entry-5","parentId":"entry-4","timestamp":"2026-07-21T00:00:05.000Z","fromId":"entry-2","summary":"branch summary"}
+{"type":"custom","id":"entry-6","parentId":"entry-5","timestamp":"2026-07-21T00:00:06.000Z","customType":"fixture","data":{"value":1}}
+{"type":"label","id":"entry-7","parentId":"entry-6","timestamp":"2026-07-21T00:00:07.000Z","targetId":"entry-1","label":"start"}
+{"type":"session_info","id":"entry-8","parentId":"entry-7","timestamp":"2026-07-21T00:00:08.000Z","name":"fixture session"}
+{"type":"custom_message","id":"entry-9","parentId":"entry-8","timestamp":"2026-07-21T00:00:09.000Z","customType":"notice","content":"fixture","display":true}
+{"type":"future_entry","id":"entry-10","parentId":"entry-9","timestamp":"2026-07-21T00:00:10.000Z","payload":{"must":"survive"}}

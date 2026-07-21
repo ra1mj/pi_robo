@@ -51,6 +51,8 @@
 		"clean": "shx rm -rf dist",
 		"generate-models": "node scripts/generate-models.ts",
 		"generate-model-catalog": "node scripts/generate-models.ts --strict --json-only --json-output ../../.artifacts/model-catalog",
+		"generate-rust-model-catalog": "node scripts/generate-rust-model-catalog.ts",
+		"check-rust-model-catalog": "node scripts/generate-rust-model-catalog.ts --check",
 		"generate-image-models": "node scripts/generate-image-models.ts",
 		"build": "tsgo -p tsconfig.build.json",
 		"test": "vitest --run",
