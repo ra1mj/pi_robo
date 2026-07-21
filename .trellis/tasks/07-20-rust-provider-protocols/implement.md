@@ -7,8 +7,11 @@ The archived `rust-foundation-contracts` dependency is verified `completed`, and
 ## Step 1: Refine Foundation Interfaces and Lock Dependencies
 
 - Verify the archived `rust-foundation-contracts` task is `complete` and read its completion evidence and Rust code-spec.
-- Capture exact protocol-neutral request options from the selected TypeScript types before extending `ModelRequest`.
-- Add wakeable cancellation and typed/redacted error metadata with object-safety, cancellation-wakeup, and serialization tests.
+- Implement the exact seven protocol-neutral option groups frozen in `design.md`; keep transport/security configuration separate and do not port npm SDK-only controls.
+- Add the object-safe cancellation future and prove an already-pending waiter wakes without polling or wall-clock delay.
+- Replace string error categories with the frozen closed enum and structured status/code/retry fields; test 401/403/404/429 quota/429 throttle/timeout/network/5xx/context-overflow/protocol/cancel mappings and redaction.
+- Add response ID/model, tool-result metadata, typed tool-call end, and typed terminal reasons to `pi-protocol`, including unchanged JSON round trips.
+- Enforce one terminal stream path: outer pre-stream error, successful `done`, or terminal structured error mapped once by the consumer.
 - Add only the exact dependencies and features approved in `design.md`; refresh `Cargo.lock` and the dependency ledger.
 - Review every new build script, native-code path, license, duplicate version, registry, and enabled feature before transport code.
 
@@ -16,7 +19,7 @@ Gate:
 
 ```bash
 cargo clippy -p pi-model -p pi-provider -p pi-test-support --all-targets --all-features --locked -- -D warnings
-cargo test -p pi-model -p pi-test-support --all-targets --locked
+cargo test -p pi-protocol -p pi-model -p pi-test-support --all-targets --locked
 cargo deny check
 ```
 

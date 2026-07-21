@@ -21,6 +21,7 @@ Implement the five milestone-1 provider protocol adapters behind the canonical R
 - [ ] Adapter tests require no external network access, API keys, or paid tokens.
 - [ ] Unknown or unsupported provider events produce explicit, typed failures instead of silent data loss.
 - [ ] Provider-specific behavior remains isolated from the agent runtime and CLI.
+- [ ] Interface fixtures prove typed request options, wakeable cancellation, closed error categories, structured retry metadata, response ID/model preservation, and typed tool-call/terminal events before HTTP transport work starts.
 
 ## Out of Scope
 

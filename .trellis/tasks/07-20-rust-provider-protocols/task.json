@@ -21,6 +21,6 @@
   "children": [],
   "parent": "07-17-rust-rewrite",
   "relatedFiles": [],
-  "notes": "Planning reviewed and accepted on 2026-07-21. The archived rust-foundation-contracts dependency is verified completed. Ready for task.py start when the workflow enters implementation; trellis-before-dev remains mandatory.",
+  "notes": "Planning reviewed and accepted on 2026-07-21. The archived rust-foundation-contracts dependency is verified completed. The provider interface contract is frozen from TypeScript evidence: typed request options, wakeable cancellation, closed failures, structured stream termination, and provider-blocking DTO parity. Ready for task.py start when the workflow enters implementation; trellis-before-dev remains mandatory.",
   "meta": {}
 }

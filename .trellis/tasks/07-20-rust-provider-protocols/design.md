@@ -40,7 +40,7 @@ One injected asynchronous HTTP client provides:
 
 The SSE decoder handles CRLF/LF, comments/keepalives, multiple `data:` lines, blank-event delimiters, UTF-8 splits, trailing partial events, protocol sentinels, and malformed JSON. It never interprets provider semantics itself.
 
-No adapter silently retries a started stream. Adapters normalize HTTP status, retry headers, and provider error payloads into retry metadata consumed by `pi-runtime`. Any safe pre-stream transport retry must be explicitly specified and fixture-tested rather than inherited from client defaults.
+No adapter retries a request or started stream in milestone 1. Automatic client retries are disabled. Adapters normalize HTTP status, retry headers, and provider error payloads into retry metadata consumed by `pi-runtime`, which alone owns retry budgets and scheduling.
 
 ## Adapter Interface and State Machine
 
@@ -50,21 +50,47 @@ Each adapter has three stages:
 2. Decode ordered wire events into canonical assistant events while accumulating the final assistant message.
 3. Emit exactly one terminal outcome: complete, length-limited, error, or aborted.
 
-Once a stream begins, failures are represented through the canonical terminal assistant/error sequence. Configuration failures before sending return a normal typed error. Unknown events are accepted only when the protocol documents them as ignorable metadata; unknown content-bearing or terminal events fail explicitly with redacted context.
+Once a stream begins, failures use the typed terminal failure path defined below; the consumer maps that path one-to-one into the canonical assistant `error` event. Configuration failures before sending return a normal typed error. Unknown events are accepted only when the protocol documents them as ignorable metadata; unknown content-bearing or terminal events fail explicitly with redacted context.
 
 Tool-call JSON is accumulated incrementally. Malformed or truncated arguments remain a failed tool call and are never converted into an apparently executable call. Output-limit responses cannot expose a truncated tool call as valid.
 
 ## Foundation Interface Refinements
 
-The completed foundation deliberately exposed only the smallest object-safe boundary. Before transport work, this child extends that boundary without adding provider behavior to `pi-model`:
+The completed foundation deliberately exposed only the smallest object-safe boundary. Before transport work, this child extends that boundary without adding provider behavior to `pi-model`. These are direct refinements of the unpublished Rust contract; no backward-compatibility layer is retained.
 
-- `Cancellation` gains a wakeable cancellation future or equivalent waker registration. Polling `is_cancelled()` alone cannot interrupt a pending connect/body read and is insufficient for the provider contract.
-- `ModelRequest` gains a typed options object for maximum output, temperature, thinking/reasoning settings, and protocol-neutral request controls found in the selected TypeScript adapters.
-- `ModelServiceError.category` becomes a closed normalized category. Errors carry optional HTTP status, provider code, and `retry_after_ms`; public formatting remains redacted.
-- Immutable `ProviderAdapterConfig` in `pi-provider` owns the resolved base URL, synthetic/real authorization value, explicit headers, proxy, and timeout policy. Adapters never read environment variables or user files.
-- Started-stream failures still terminate through the canonical assistant/error event path; only configuration/connect failures before stream creation return the outer service error.
+### Request Semantics
 
-These are refinements of the foundation contract, not compatibility shims. No backward-compatibility layer is retained during the unpublished Rust migration.
+The common TypeScript surface is defined in `packages/ai/src/types.ts:113` and its simple-mode projection in `packages/ai/src/api/simple-options.ts:21`; protocol-specific option extensions remain in their owning adapter modules.
+
+`ModelRequest` gains a `ModelRequestOptions` field with only protocol-neutral milestone-1 semantics:
+
+| Field | Rust shape | Rule |
+| --- | --- | --- |
+| `temperature` | `Option<f64>` | Omit when absent; reject non-finite values before dispatch |
+| `max_tokens` | `Option<u64>` | Adapter uses the model maximum when absent; later runtime context clamping remains outside the adapter |
+| `reasoning` | `Option<ThinkingLevel>` | Closed `minimal/low/medium/high/xhigh/max` enum; absent means no explicit thinking request |
+| `thinking_budgets` | `Option<ThinkingBudgets>` with `minimal/low/medium/high` fields | `xhigh` and `max` use the selected adapter's high/dynamic mapping rather than inventing extra token-budget fields |
+| `cache_retention` | `CacheRetention::{None, Short, Long}` | Defaults to `Short`; adapters downgrade only when model compatibility says long retention is unsupported |
+| `session_id` | `Option<String>` | Used only by compatibility rules that explicitly enable cache/session affinity |
+| `tool_choice` | optional `Auto/None/Required/Named(String)` enum | Maps `Required` to Anthropic/Google `any`; absent preserves the provider default |
+
+Authentication, base URL, headers, proxy, and connect/header/body-idle timeouts belong to immutable `ProviderAdapterConfig`. Provider environment lookup and credential resolution occur before construction. Retry scheduling and retry-delay caps belong to `pi-runtime`; adapters only classify failures and report the provider's bounded retry hint. Payload/response callbacks, WebSocket transports, injected vendor SDK clients, service tiers, reasoning-summary controls, and provider-specific display/beta toggles are published npm SDK surface rather than milestone-1 CLI requirements and are not added to the canonical Rust request.
+
+### Wakeable Cancellation
+
+`Cancellation` keeps `is_cancelled()` for the pre-dispatch fast path and adds an object-safe `cancelled(&self) -> CancellationFuture<'_>`. The future resolves immediately when already cancelled and wakes every registered waiter exactly once when cancellation occurs. Connect, response-header, body-read, and timeout waits race this future; no network operation relies on polling. `pi-model` remains executor-neutral, while `pi-test-support` proves pending-future wakeup without wall-clock sleeps.
+
+### Typed Failures and Stream Termination
+
+The current TypeScript runtime infers retryability from display strings (`packages/ai/src/utils/retry.ts:7`); Rust replaces that compatibility fallback with structured classification at the adapter boundary.
+
+`ModelServiceError.category` becomes the closed enum `Configuration`, `Authentication`, `Permission`, `InvalidRequest`, `NotFound`, `ContextOverflow`, `RateLimit`, `QuotaExceeded`, `Timeout`, `Network`, `Unavailable`, `Server`, `Protocol`, `Cancelled`, or `Unknown`. The error also carries redacted `message`, authoritative `retryable`, and optional `http_status`, `provider_code`, and `retry_after_ms` fields. `QuotaExceeded` is non-retryable even when the HTTP status is 429; timeout, network, transient unavailable/server, and ordinary rate-limit failures may be retryable. Cancellation maps to canonical stop reason `aborted`; context overflow stays distinct so the later runtime can compact before retrying.
+
+`ModelFuture` returns outer errors only before a stream is established. An established stream emits `start`, zero or more ordered partial events, then exactly one of `done` or a terminal `Err(ModelServiceError)` item. The consumer retains the latest partial assistant message and maps terminal `Err` exactly once to the public `AssistantMessageEvent::Error`; an adapter never emits both an error event and an error item. EOF without a terminal item is a retry-classified `Protocol` failure. This preserves structured internal retry data without serializing Rust-only state into JSON output.
+
+### Provider-Blocking DTO Parity
+
+Before adapter fixtures, `pi-protocol` adds the TypeScript fields already required by the selected providers (`packages/ai/src/types.ts:394`, `packages/ai/src/types.ts:395`, `packages/ai/src/types.ts:408`, `packages/ai/src/types.ts:414`, and `packages/ai/src/types.ts:474`): `AssistantMessage.response_model`, `AssistantMessage.response_id`, `ToolResultMessage.details`, and `ToolResultMessage.added_tool_names`. `ToolCallEnd.tool_call` becomes `ToolCallBlock` instead of raw JSON. Successful terminal reasons become a closed `Stop/Length/ToolUse` enum and failure reasons a closed `Error/Aborted` enum. Round-trip fixtures prove the JSON spellings remain unchanged and unknown persisted fields remain lossless.
 
 ## Dependency Decision
 
@@ -160,3 +186,6 @@ This child only adds `pi-provider`, test-support extensions, and fixtures. The c
 - Started streams have exactly one canonical terminal outcome.
 - Automated validation is local-only and secret-free.
 - Direct `openai`, `anthropic`, `google`, and explicitly configured custom endpoints are the only milestone-1 claims.
+- The canonical request contains seven protocol-neutral option groups; SDK-only callbacks, transports, and provider-specific controls are excluded.
+- Provider errors use closed categories and structured retry metadata; display-string regex matching is not the Rust retry contract.
+- Provider-blocking response IDs/models and terminal/tool-call DTOs are typed before transport implementation.
