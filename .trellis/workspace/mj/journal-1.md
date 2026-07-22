@@ -72,3 +72,36 @@ Implemented OpenAI Chat, OpenAI Responses, Anthropic, Google, and faux Rust prov
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Implement Rust agent runtime and core tools
+
+**Date**: 2026-07-22
+**Task**: Implement Rust agent runtime and core tools
+**Branch**: `main`
+
+### Summary
+
+Implemented and verified the provider-neutral Rust agent loop, read/bash/edit/write tools, image handling, retry, cancellation, automatic compaction, compatibility fixtures, dependency policy, and foundation specification.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `95b2af86` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
