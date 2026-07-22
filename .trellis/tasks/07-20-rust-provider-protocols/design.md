@@ -2,7 +2,7 @@
 
 ## Status and Dependency Gate
 
-Planning was reviewed and accepted on 2026-07-21. `../archive/2026-07/07-20-rust-foundation-contracts` is verified `completed`. This child remains in `planning` during the current planning-only workflow and may start only after `trellis-before-dev` loads the implementation context.
+Planning was reviewed and accepted on 2026-07-21, and authorization to modify code was explicitly reconfirmed on 2026-07-22. `../archive/2026-07/07-20-rust-foundation-contracts` is verified `completed`. This child remains in `planning` only because the current workflow is planning-only; once implementation is enabled, it may start after `trellis-before-dev` loads the implementation context without another approval round.
 
 ## Evidence and Compatibility Oracle
 

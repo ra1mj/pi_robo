@@ -12,7 +12,7 @@ Implement the five milestone-1 provider protocol adapters behind the canonical R
 - Cover request mapping, streamed event decoding, tool calls/results, text and image content, usage, stop reasons, cancellation, retry classification, and normalized errors.
 - Keep provider credentials and model selection outside adapter internals; accept resolved configuration through explicit interfaces.
 - Use local HTTP/SSE fixtures for the required test matrix. Live-provider smoke tests require separate explicit authorization and credentials.
-- `design.md` and `implement.md` were reviewed and accepted on 2026-07-21; `task.py start` remains deferred until the workflow enters implementation.
+- `design.md` and `implement.md` were reviewed and accepted on 2026-07-21, and authorization to modify code was explicitly reconfirmed on 2026-07-22; `task.py start` is deferred only until the workflow enters implementation.
 
 ## Acceptance Criteria
 
