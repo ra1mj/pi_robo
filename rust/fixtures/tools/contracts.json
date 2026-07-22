@@ -1,0 +1,34 @@
+{
+  "limits": {
+    "lines": 2000,
+    "bytes": 51200
+  },
+  "schemas": {
+    "read": {
+      "required": ["path"],
+      "optional": ["offset", "limit"]
+    },
+    "bash": {
+      "required": ["command"],
+      "optional": ["timeout"]
+    },
+    "edit": {
+      "required": ["path", "edits"],
+      "editRequired": ["oldText", "newText"]
+    },
+    "write": {
+      "required": ["path", "content"]
+    }
+  },
+  "imageMimeTypes": [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/bmp"
+  ],
+  "normalizers": [
+    "temporary-root",
+    "timestamp"
+  ]
+}

@@ -2,7 +2,7 @@
 
 ## Status and Dependency Gate
 
-Planning design only. `../07-20-rust-foundation-contracts` must be `complete` before this child starts. Provider wire adapters and disk-backed resources are intentionally not prerequisites because this child uses injected Faux and in-memory stores.
+Implemented and verified on 2026-07-22. `../07-20-rust-foundation-contracts` was complete before implementation started. Provider wire adapters and disk-backed resources remain intentionally outside this child because it uses injected Faux and in-memory stores.
 
 ## Evidence and Boundary
 

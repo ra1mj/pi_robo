@@ -109,3 +109,14 @@ Run each modified TypeScript test specifically using the repository-required pac
 - Record tool parity gaps explicitly rather than marking partial behavior compatible.
 - Record cancellation/process-tree and rollback results.
 - Leave `rust-headless-cli` blocked until provider and data/resource siblings also complete.
+
+### Verified 2026-07-22
+
+- Agent orchestration: `pi-agent/tests/event_trace.rs` covers settled event ordering, parallel completion with source-ordered results, sequential override, invalid/unknown/length calls, image history, non-vision filtering, and cancellation.
+- Core tools: the named `pi-tools` path, truncation, mutation, read, image, bash, process-tree, edit, write, and TypeScript-contract suites cover the applicable success and failure matrix.
+- Retry and compaction: `retry_contract.rs`, `compaction_contract.rs`, and the runtime event trace cover bounded retry, retry-after selection, cancellation, exhaustion, threshold/overflow compaction, usage, continuation, and in-memory persistence.
+- Compatibility evidence: the agent, tool, and runtime fixture rows are `verified` and pass the compatibility-catalog runner.
+- Dependency review: direct dependencies are exact-pinned and documented; workspace boundaries, licenses, advisories, sources, and the limited image feature set pass policy checks.
+- Full gates passed: locked format, Clippy, crate tests, focused compatibility/workspace-policy tests, rustdoc warnings, `cargo deny check`, and `npm run check`.
+- Deliberate parity boundary: `bash` process groups and shell fallback are Linux-only in this milestone. Windows support, CLI registration, disk sessions, manual compaction, and branch steering remain outside this child.
+- Rollback remains removal of the new Rust runtime/tool code and fixtures; the existing TypeScript execution path was not changed.

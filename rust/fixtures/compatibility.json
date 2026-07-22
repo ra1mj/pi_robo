@@ -99,6 +99,39 @@
       "runner": "rust/crates/pi-test-support/tests/faux_contract.rs",
       "normalizers": ["/runtime/generatedTimestamp"],
       "state": "verified"
+    },
+    {
+      "id": "m1.agent.event-traces",
+      "milestone": "M1",
+      "area": "agent-runtime",
+      "owner": "pi-agent",
+      "oracle": "packages/agent/src/agent-loop.ts",
+      "fixture": "rust/fixtures/agent/event-traces.json",
+      "runner": "rust/crates/pi-agent/tests/event_trace.rs",
+      "normalizers": ["/runtime/generatedTimestamp"],
+      "state": "verified"
+    },
+    {
+      "id": "m1.tools.core-contracts",
+      "milestone": "M1",
+      "area": "core-tools",
+      "owner": "pi-tools",
+      "oracle": "packages/coding-agent/src/core/tools",
+      "fixture": "rust/fixtures/tools/contracts.json",
+      "runner": "rust/crates/pi-tools/tests/typescript_contract.rs",
+      "normalizers": ["/runtime/temporaryRoot", "/runtime/generatedTimestamp"],
+      "state": "verified"
+    },
+    {
+      "id": "m1.runtime.retry-compaction",
+      "milestone": "M1",
+      "area": "agent-runtime",
+      "owner": "pi-runtime",
+      "oracle": "packages/coding-agent/src/core/agent-session.ts",
+      "fixture": "rust/fixtures/runtime/policies.json",
+      "runner": "rust/crates/pi-runtime/tests/retry_contract.rs",
+      "normalizers": [],
+      "state": "verified"
     }
   ]
 }

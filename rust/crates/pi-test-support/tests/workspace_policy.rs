@@ -56,8 +56,12 @@ fn workspace_dependency_boundaries_are_enforced() -> Result<(), Box<dyn Error>> 
         ),
         ("pi-tools", BTreeSet::from(["pi-agent", "pi-protocol"])),
     ]);
-    let allowed_dev: BTreeMap<&str, BTreeSet<&str>> =
-        BTreeMap::from([("pi-provider", BTreeSet::from(["pi-test-support"]))]);
+    let allowed_dev: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::from([
+        ("pi-agent", BTreeSet::from(["pi-test-support"])),
+        ("pi-provider", BTreeSet::from(["pi-test-support"])),
+        ("pi-runtime", BTreeSet::from(["pi-test-support"])),
+        ("pi-tools", BTreeSet::from(["pi-test-support"])),
+    ]);
 
     let workspace_packages: Vec<&Value> = packages
         .iter()

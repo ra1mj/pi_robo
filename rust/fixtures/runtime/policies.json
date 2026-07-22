@@ -1,0 +1,14 @@
+{
+  "retry": {
+    "maxRetries": 3,
+    "delaysMs": [2000, 4000, 8000],
+    "retryAfterOverridesBackoff": true,
+    "cancellable": true
+  },
+  "compaction": {
+    "thresholdTiming": "after-response",
+    "thresholdStartsNewTurn": false,
+    "overflowMaxCompactAndRetry": 1,
+    "summaryInsertion": "user-context-summary"
+  }
+}

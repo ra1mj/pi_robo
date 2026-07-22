@@ -3,7 +3,7 @@
   "name": "rust-agent-tools",
   "title": "Rust agent runtime and core tools",
   "description": "Implement the provider-neutral agent loop, four core tools, images, retry, cancellation, and automatic compaction.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

@@ -8,9 +8,14 @@ repository.workspace = true
 publish = false
 
 [dependencies]
+futures-util = { workspace = true }
 pi-model = { workspace = true }
 pi-protocol = { workspace = true }
 serde_json = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+pi-test-support = { workspace = true }
 
 [lints]
 workspace = true

@@ -1,0 +1,39 @@
+{
+  "singlePrompt": [
+    "agent_start",
+    "turn_start",
+    "message_start:user",
+    "message_end:user",
+    "message_start:assistant",
+    "message_update",
+    "message_end:assistant",
+    "turn_end",
+    "agent_end"
+  ],
+  "toolTurn": [
+    "agent_start",
+    "turn_start",
+    "message_start:user",
+    "message_end:user",
+    "message_start:assistant",
+    "message_update",
+    "message_end:assistant",
+    "tool_execution_start:echo",
+    "tool_execution_end:echo",
+    "message_start:toolResult",
+    "message_end:toolResult",
+    "turn_end",
+    "turn_start",
+    "message_start:assistant",
+    "message_update",
+    "message_end:assistant",
+    "turn_end",
+    "agent_end"
+  ],
+  "parallelResultOrder": {
+    "completion": ["second", "first"],
+    "messages": ["first", "second"]
+  },
+  "lengthToolError": "Tool call was not executed because the assistant response reached its output limit",
+  "unknownToolError": "Unknown tool: missing"
+}

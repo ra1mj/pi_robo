@@ -1,5 +1,9 @@
 # Rust agent runtime and core tools
 
+## Status
+
+Implementation and verification completed on 2026-07-22. The archived `rust-foundation-contracts` dependency was verified complete before work started; no open product or scope question remains.
+
 ## Goal
 
 Implement the provider-neutral Rust agent loop and the milestone-1 `read`, `bash`, `edit`, and `write` tools with image, retry, and compaction behavior.
@@ -17,12 +21,12 @@ Implement the provider-neutral Rust agent loop and the milestone-1 `read`, `bash
 
 ## Acceptance Criteria
 
-- [ ] Multi-turn text and tool-call loops pass deterministic Faux fixtures.
-- [ ] Each core tool passes success, invalid-input, missing-path, permission, cancellation, and output-truncation tests applicable to that tool.
-- [ ] Image content survives agent and tool round trips without silent degradation.
-- [ ] Retry tests prove bounded retries, backoff policy selection, cancellation, and terminal error propagation.
-- [ ] Compaction tests prove trigger selection, summary insertion, token/usage accounting, and continued execution.
-- [ ] The runtime is usable through an in-memory store and provider interface without CLI or disk-resource dependencies.
+- [x] Multi-turn text and tool-call loops pass deterministic Faux fixtures.
+- [x] Each core tool passes success, invalid-input, missing-path, permission, cancellation, and output-truncation tests applicable to that tool.
+- [x] Image content survives agent and tool round trips without silent degradation.
+- [x] Retry tests prove bounded retries, backoff policy selection, cancellation, and terminal error propagation.
+- [x] Compaction tests prove trigger selection, summary insertion, token/usage accounting, and continued execution.
+- [x] The runtime is usable through an in-memory store and provider interface without CLI or disk-resource dependencies.
 
 ## Out of Scope
 
