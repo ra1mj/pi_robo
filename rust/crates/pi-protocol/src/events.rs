@@ -1,6 +1,23 @@
-use crate::{AssistantMessage, Extensions, Message};
+use crate::{AssistantMessage, Extensions, Message, ToolCallBlock};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+/// Successful assistant stream termination reasons.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CompletionReason {
+    Stop,
+    Length,
+    ToolUse,
+}
+
+/// Failed assistant stream termination reasons.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FailureReason {
+    Error,
+    Aborted,
+}
 
 /// Streaming events emitted while constructing an assistant message.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -70,17 +87,17 @@ pub enum AssistantMessageEvent {
         #[serde(rename = "contentIndex")]
         content_index: usize,
         #[serde(rename = "toolCall")]
-        tool_call: Value,
+        tool_call: ToolCallBlock,
         partial: AssistantMessage,
     },
     #[serde(rename = "done")]
     Done {
-        reason: String,
+        reason: CompletionReason,
         message: AssistantMessage,
     },
     #[serde(rename = "error")]
     Error {
-        reason: String,
+        reason: FailureReason,
         error: AssistantMessage,
     },
 }

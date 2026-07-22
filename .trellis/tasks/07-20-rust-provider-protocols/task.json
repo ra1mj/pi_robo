@@ -3,7 +3,7 @@
   "name": "rust-provider-protocols",
   "title": "Rust provider protocol adapters",
   "description": "Implement the five milestone-1 provider protocol adapters with deterministic local conformance fixtures.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

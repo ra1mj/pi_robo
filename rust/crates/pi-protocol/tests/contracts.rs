@@ -1,5 +1,8 @@
 use pi_protocol::ContractErrorCategory;
-use pi_protocol::{AssistantMessageEvent, Message, ModelCatalog, PersistedSessionRecord, Settings};
+use pi_protocol::{
+    AssistantMessageEvent, CompletionReason, FailureReason, Message, ModelCatalog,
+    PersistedSessionRecord, Settings,
+};
 use serde_json::Value;
 use std::error::Error;
 use std::fs;
@@ -27,7 +30,21 @@ fn assistant_events_match_the_fixture() -> Result<(), Box<dyn Error>> {
         "rust/fixtures/protocol/assistant-events.json",
     ))?)?;
     let events: Vec<AssistantMessageEvent> = serde_json::from_value(source.clone())?;
-    assert_eq!(serde_json::to_value(events)?, source);
+    assert_eq!(serde_json::to_value(&events)?, source);
+    assert!(matches!(
+        events.first(),
+        Some(AssistantMessageEvent::Done {
+            reason: CompletionReason::Stop,
+            ..
+        })
+    ));
+    assert!(matches!(
+        events.get(1),
+        Some(AssistantMessageEvent::Error {
+            reason: FailureReason::Error,
+            ..
+        })
+    ));
     Ok(())
 }
 

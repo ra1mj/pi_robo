@@ -56,6 +56,8 @@ fn workspace_dependency_boundaries_are_enforced() -> Result<(), Box<dyn Error>> 
         ),
         ("pi-tools", BTreeSet::from(["pi-agent", "pi-protocol"])),
     ]);
+    let allowed_dev: BTreeMap<&str, BTreeSet<&str>> =
+        BTreeMap::from([("pi-provider", BTreeSet::from(["pi-test-support"]))]);
 
     let workspace_packages: Vec<&Value> = packages
         .iter()
@@ -76,12 +78,24 @@ fn workspace_dependency_boundaries_are_enforced() -> Result<(), Box<dyn Error>> 
             .ok_or("package dependencies must be an array")?;
         let internal: BTreeSet<&str> = dependencies
             .iter()
+            .filter(|dependency| dependency["kind"].as_str() != Some("dev"))
             .filter_map(|dependency| dependency["name"].as_str())
             .filter(|dependency| dependency.starts_with("pi-"))
             .collect();
         assert_eq!(
             internal, allowed[name],
             "unexpected dependency edge for {name}"
+        );
+        let internal_dev: BTreeSet<&str> = dependencies
+            .iter()
+            .filter(|dependency| dependency["kind"].as_str() == Some("dev"))
+            .filter_map(|dependency| dependency["name"].as_str())
+            .filter(|dependency| dependency.starts_with("pi-"))
+            .collect();
+        assert_eq!(
+            internal_dev,
+            allowed_dev.get(name).cloned().unwrap_or_default(),
+            "unexpected development dependency edge for {name}"
         );
         assert!(
             name == "pi-test-support" || !internal.contains("pi-test-support"),

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "protocol": "anthropic_messages",
+  "requestCases": [
+    {
+      "id": "adaptive-thinking-tools-cache",
+      "canonical": {
+        "systemPrompt": "Use tools precisely.",
+        "reasoning": "high",
+        "cacheRetention": "long",
+        "toolChoice": "required"
+      },
+      "wire": {
+        "model": "claude-model",
+        "system": [
+          { "type": "text", "text": "Use tools precisely.", "cache_control": { "type": "ephemeral", "ttl": "1h" } }
+        ],
+        "messages": [{ "role": "user", "content": "read the file" }],
+        "max_tokens": 4096,
+        "stream": true,
+        "thinking": { "type": "adaptive", "display": "summarized" },
+        "output_config": { "effort": "high" },
+        "tool_choice": { "type": "any" },
+        "tools": [
+          {
+            "name": "read",
+            "description": "Read a file",
+            "eager_input_streaming": true,
+            "input_schema": { "type": "object", "properties": { "path": { "type": "string" } }, "required": ["path"] },
+            "cache_control": { "type": "ephemeral", "ttl": "1h" }
+          }
+        ]
+      }
+    },
+    {
+      "id": "signed-thinking-image-and-tool-result",
+      "canonical": {
+        "assistant": [
+          { "type": "thinking", "thinking": "prior reasoning", "thinkingSignature": "signed-reasoning" },
+          { "type": "toolCall", "id": "toolu_1", "name": "inspect", "arguments": {} }
+        ],
+        "toolResult": [
+          { "type": "text", "text": "red circle" },
+          { "type": "image", "mimeType": "image/png", "data": "aW1hZ2U=" }
+        ]
+      },
+      "wire": [
+        {
+          "role": "assistant",
+          "content": [
+            { "type": "thinking", "thinking": "prior reasoning", "signature": "signed-reasoning" },
+            { "type": "tool_use", "id": "toolu_1", "name": "inspect", "input": {} }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "toolu_1",
+              "content": [
+                { "type": "text", "text": "red circle" },
+                { "type": "image", "source": { "type": "base64", "media_type": "image/png", "data": "aW1hZ2U=" } }
+              ],
+              "is_error": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "streamCases": [
+    {
+      "id": "thinking-tool-and-usage",
+      "wire": [
+        "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"usage\":{\"input_tokens\":12,\"output_tokens\":0,\"cache_read_input_tokens\":2,\"cache_creation_input_tokens\":3,\"cache_creation\":{\"ephemeral_1h_input_tokens\":1}}}}\n\n",
+        "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"thinking\",\"thinking\":\"\",\"signature\":\"\"}}\n\n",
+        "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"thinking_delta\",\"thinking\":\"think\"}}\n\n",
+        "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"signature_delta\",\"signature\":\"signature-1\"}}\n\n",
+        "event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
+        "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"input_tokens\":12,\"output_tokens\":5,\"cache_read_input_tokens\":2,\"cache_creation_input_tokens\":3,\"output_tokens_details\":{\"thinking_tokens\":4}}}\n\n",
+        "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n"
+      ],
+      "expected": {
+        "eventTypes": ["start", "thinking_start", "thinking_delta", "thinking_end", "done"],
+        "terminal": "stop",
+        "responseId": "msg_1",
+        "thinkingSignature": "signature-1",
+        "usage": { "input": 12, "output": 5, "cacheRead": 2, "cacheWrite": 3, "cacheWrite1h": 1, "reasoning": 4, "totalTokens": 22 }
+      }
+    },
+    {
+      "id": "truncated-before-message-stop",
+      "wire": [
+        "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_truncated\",\"usage\":{\"input_tokens\":1,\"output_tokens\":0}}}\n\n"
+      ],
+      "expected": { "terminal": "protocol_error", "retryable": true }
+    }
+  ],
+  "errorCases": [
+    { "id": "authentication", "status": 401, "providerCode": "authentication_error", "category": "authentication", "retryable": false, "retryAfterMs": null },
+    { "id": "context", "status": 400, "providerCode": "request_too_large", "message": "maximum context window", "category": "context_overflow", "retryable": false, "retryAfterMs": null },
+    { "id": "overloaded", "status": 529, "providerCode": "overloaded_error", "category": "server", "retryable": true, "retryAfterMs": 1000 },
+    { "id": "malformed-sse", "status": null, "providerCode": null, "category": "protocol", "retryable": false, "retryAfterMs": null },
+    { "id": "cancelled", "status": null, "providerCode": null, "category": "cancelled", "retryable": false, "retryAfterMs": null }
+  ],
+  "allowedNondeterminism": [],
+  "unsupported": [
+    "injected vendor SDK clients",
+    "OAuth identity emulation",
+    "automatic adapter retries"
+  ]
+}

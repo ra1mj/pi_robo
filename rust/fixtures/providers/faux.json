@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "protocol": "faux",
+  "requestCases": [
+    {
+      "id": "scripted-mixed-content",
+      "canonical": {
+        "model": "faux-1",
+        "systemPrompt": "Be concise.",
+        "messages": [{ "role": "user", "content": "hello", "timestamp": 1 }],
+        "options": { "sessionId": "faux-session-1", "cacheRetention": "short" }
+      },
+      "script": {
+        "content": [
+          { "type": "thinking", "thinking": "think" },
+          { "type": "text", "text": "answer" },
+          { "type": "toolCall", "id": "tool-1", "name": "echo", "arguments": { "text": "hello" } }
+        ],
+        "stopReason": "toolUse"
+      }
+    },
+    {
+      "id": "cache-prefix",
+      "canonical": {
+        "firstPrompt": "system:Be concise.\n\nuser:hello",
+        "secondPrompt": "system:Be concise.\n\nuser:hello\n\nassistant:answer\n\nuser:continue",
+        "sessionId": "faux-session-1"
+      },
+      "expected": {
+        "first": { "cacheRead": 0, "cacheWrite": "full-prompt-estimate" },
+        "second": { "cacheRead": "common-prefix-estimate", "cacheWrite": "suffix-estimate" }
+      }
+    }
+  ],
+  "streamCases": [
+    {
+      "id": "fixed-chunk-order",
+      "tokenSize": { "min": 1, "max": 1 },
+      "expected": {
+        "eventTypes": [
+          "start",
+          "thinking_start",
+          "thinking_delta",
+          "thinking_end",
+          "text_start",
+          "text_delta",
+          "text_end",
+          "toolcall_start",
+          "toolcall_delta",
+          "toolcall_end",
+          "done"
+        ],
+        "terminal": "toolUse"
+      }
+    },
+    {
+      "id": "cancel-mid-delta",
+      "cancelAfterEvent": "text_delta",
+      "expected": {
+        "eventTypes": ["start", "text_start", "text_delta"],
+        "terminal": "cancelled",
+        "retryable": false
+      }
+    }
+  ],
+  "errorCases": [
+    { "id": "queue-exhausted", "status": null, "providerCode": "no_scripted_response", "category": "configuration", "retryable": false, "retryAfterMs": null },
+    { "id": "factory-error", "status": null, "providerCode": "script_factory_error", "category": "unknown", "retryable": false, "retryAfterMs": null },
+    { "id": "cancelled", "status": null, "providerCode": null, "category": "cancelled", "retryable": false, "retryAfterMs": null }
+  ],
+  "runtime": { "generatedTimestamp": "<generated-timestamp>" },
+  "allowedNondeterminism": ["/runtime/generatedTimestamp"],
+  "unsupported": [
+    "production provider registration",
+    "network access",
+    "random chunk boundaries in deterministic contract tests"
+  ]
+}

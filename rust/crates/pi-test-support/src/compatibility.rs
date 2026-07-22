@@ -8,6 +8,7 @@ use std::path::{Component, Path};
 #[serde(rename_all = "snake_case")]
 pub enum CompatibilityState {
     Planned,
+    Captured,
     InProgress,
     Verified,
     Blocked,

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "protocol": "openai_responses",
+  "requestCases": [
+    {
+      "id": "reasoning-and-cache",
+      "canonical": {
+        "systemPrompt": "Be concise.",
+        "messages": [{ "role": "user", "content": "hello", "timestamp": 1 }],
+        "options": { "reasoning": "high", "maxTokens": 8, "sessionId": "session-responses-1", "cacheRetention": "long" }
+      },
+      "wire": {
+        "model": "responses-model",
+        "input": [
+          { "role": "developer", "content": "Be concise." },
+          { "role": "user", "content": [{ "type": "input_text", "text": "hello" }] }
+        ],
+        "stream": true,
+        "store": false,
+        "max_output_tokens": 16,
+        "prompt_cache_key": "session-responses-1",
+        "prompt_cache_retention": "24h",
+        "reasoning": { "effort": "high", "summary": "auto" },
+        "include": ["reasoning.encrypted_content"]
+      }
+    },
+    {
+      "id": "tool-replay-and-image-result",
+      "canonical": {
+        "toolCallId": "call_1|fc_1",
+        "toolName": "inspect",
+        "result": [
+          { "type": "text", "text": "red circle" },
+          { "type": "image", "mimeType": "image/png", "data": "aW1hZ2U=" }
+        ]
+      },
+      "wire": [
+        { "type": "function_call", "id": "fc_1", "call_id": "call_1", "name": "inspect", "arguments": "{}" },
+        {
+          "type": "function_call_output",
+          "call_id": "call_1",
+          "output": [
+            { "type": "input_text", "text": "red circle" },
+            { "type": "input_image", "detail": "auto", "image_url": "data:image/png;base64,aW1hZ2U=" }
+          ]
+        }
+      ]
+    }
+  ],
+  "streamCases": [
+    {
+      "id": "reasoning-text-tool-complete",
+      "wire": [
+        "data: {\"type\":\"response.created\",\"response\":{\"id\":\"resp_1\"}}\n\n",
+        "data: {\"type\":\"response.output_item.added\",\"output_index\":0,\"item\":{\"type\":\"reasoning\",\"id\":\"rs_1\",\"summary\":[]}}\n\n",
+        "data: {\"type\":\"response.reasoning_summary_text.delta\",\"output_index\":0,\"delta\":\"think\"}\n\n",
+        "data: {\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{\"type\":\"reasoning\",\"id\":\"rs_1\",\"summary\":[{\"type\":\"summary_text\",\"text\":\"think\"}],\"encrypted_content\":\"opaque\"}}\n\n",
+        "data: {\"type\":\"response.completed\",\"response\":{\"id\":\"resp_1\",\"status\":\"completed\",\"usage\":{\"input_tokens\":20,\"output_tokens\":7,\"total_tokens\":27,\"input_tokens_details\":{\"cached_tokens\":2,\"cache_write_tokens\":3},\"output_tokens_details\":{\"reasoning_tokens\":4}}}}\n\n"
+      ],
+      "expected": {
+        "terminal": "stop",
+        "responseId": "resp_1",
+        "thinkingSignature": "preserve-complete-reasoning-item-json",
+        "usage": { "input": 15, "output": 7, "cacheRead": 2, "cacheWrite": 3, "reasoning": 4, "totalTokens": 27 }
+      }
+    },
+    {
+      "id": "incomplete",
+      "wire": [
+        "data: {\"type\":\"response.incomplete\",\"response\":{\"id\":\"resp_2\",\"status\":\"incomplete\",\"incomplete_details\":{\"reason\":\"max_output_tokens\"}}}\n\n"
+      ],
+      "expected": { "terminal": "length", "responseId": "resp_2" }
+    },
+    {
+      "id": "abrupt-eof",
+      "wire": [
+        "data: {\"type\":\"response.created\",\"response\":{\"id\":\"resp_truncated\"}}\n\n"
+      ],
+      "expected": { "terminal": "protocol_error", "retryable": true }
+    }
+  ],
+  "errorCases": [
+    { "id": "permission", "status": 403, "providerCode": "permission_denied", "category": "permission", "retryable": false, "retryAfterMs": null },
+    { "id": "not-found", "status": 404, "providerCode": "model_not_found", "category": "not_found", "retryable": false, "retryAfterMs": null },
+    { "id": "timeout", "status": 408, "providerCode": null, "category": "timeout", "retryable": true, "retryAfterMs": null },
+    { "id": "failed-event", "status": 500, "providerCode": "server_error", "category": "server", "retryable": true, "retryAfterMs": null },
+    { "id": "cancelled", "status": null, "providerCode": null, "category": "cancelled", "retryable": false, "retryAfterMs": null }
+  ],
+  "allowedNondeterminism": [],
+  "unsupported": [
+    "service tier pricing controls in canonical requests",
+    "reasoning summary display controls",
+    "automatic adapter retries"
+  ]
+}

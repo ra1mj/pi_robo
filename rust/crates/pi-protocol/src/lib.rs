@@ -8,7 +8,7 @@ mod session;
 mod settings;
 
 pub use error::{ContractError, ContractErrorCategory};
-pub use events::{AgentEvent, AssistantMessageEvent};
+pub use events::{AgentEvent, AssistantMessageEvent, CompletionReason, FailureReason};
 pub use message::{
     AssistantMessage, ContentBlock, ImageBlock, Message, MessageContent, StopReason, TextBlock,
     ThinkingBlock, ToolCallBlock, ToolDefinition, ToolResultMessage, Usage, UsageCost, UserMessage,

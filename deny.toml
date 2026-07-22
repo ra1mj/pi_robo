@@ -2,12 +2,28 @@
 ignore = []
 
 [licenses]
-allow = ["Apache-2.0", "MIT", "Unicode-3.0"]
+allow = [
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "CDLA-Permissive-2.0",
+  "ISC",
+  "MIT",
+  "MIT-0",
+  "Unicode-3.0",
+]
 confidence-threshold = 0.8
 
 [bans]
 multiple-versions = "deny"
 wildcards = "deny"
+# reqwest's system proxy and platform verifier paths currently require these
+# independently versioned upstream major/minor lines.
+skip = [
+  { name = "core-foundation", version = "0.9.4" },
+  { name = "core-foundation", version = "0.10.1" },
+  { name = "syn", version = "2.0.119" },
+  { name = "syn", version = "3.0.2" },
+]
 
 [sources]
 unknown-registry = "deny"

@@ -10,7 +10,11 @@ license = "MIT"
 repository = "https://github.com/earendil-works/pi-mono"
 
 [workspace.dependencies]
+base64 = "=0.22.1"
+bytes = "=1.12.1"
 futures-core = "=0.3.33"
+futures-util = "=0.3.33"
+httpdate = "=1.0.3"
 pi-agent = { path = "rust/crates/pi-agent", version = "=0.1.0" }
 pi-model = { path = "rust/crates/pi-model", version = "=0.1.0" }
 pi-protocol = { path = "rust/crates/pi-protocol", version = "=0.1.0" }
@@ -18,9 +22,12 @@ pi-provider = { path = "rust/crates/pi-provider", version = "=0.1.0" }
 pi-resources = { path = "rust/crates/pi-resources", version = "=0.1.0" }
 pi-runtime = { path = "rust/crates/pi-runtime", version = "=0.1.0" }
 pi-store = { path = "rust/crates/pi-store", version = "=0.1.0" }
+pi-test-support = { path = "rust/crates/pi-test-support", version = "=0.1.0" }
 pi-tools = { path = "rust/crates/pi-tools", version = "=0.1.0" }
+reqwest = { version = "=0.13.4", default-features = false, features = ["rustls", "http2", "system-proxy", "stream", "json", "gzip", "brotli", "deflate"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
+tokio = { version = "=1.53.1", features = ["macros", "rt-multi-thread", "sync", "time", "net", "io-util"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -7,7 +7,7 @@ use std::fs;
 fn compatibility_catalog_has_valid_verified_evidence() -> Result<(), Box<dyn Error>> {
     let path = fixture_path("rust/fixtures/compatibility.json")?;
     let catalog = validate_compatibility_catalog(&path).map_err(|errors| errors.join("\n"))?;
-    assert!(catalog.entries.len() >= 4);
+    assert!(catalog.entries.len() >= 9);
     assert!(
         catalog
             .entries

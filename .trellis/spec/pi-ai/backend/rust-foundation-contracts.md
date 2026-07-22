@@ -11,7 +11,7 @@ Use this contract whenever a task changes `rust/**`, the Rust model catalog expo
   - Generate: `npm run generate:rust-model-catalog`
   - Verify: `npm run check:rust-model-catalog`
 - Persisted record API: `PersistedSessionRecord::parse(&str) -> Result<PersistedSessionRecord, ContractError>`.
-- Model boundary: `ModelService::stream(ModelRequest, &dyn Cancellation) -> ModelFuture`.
+- Model boundary: `ModelService::stream<'a>(&'a self, ModelRequest, &'a dyn Cancellation) -> ModelFuture<'a>`.
 - Compatibility validation: `validate_compatibility_catalog(&Path) -> Result<CompatibilityCatalog, Vec<String>>`.
 
 ## 3. Contracts
@@ -76,3 +76,89 @@ struct SessionEntry {
 ```
 
 For discriminated session records, also retain the original `serde_json::Value` through `PersistedSessionRecord`.
+
+## Scenario: Provider Protocol Adapters
+
+### 1. Scope / Trigger
+
+Use this scenario when adding or changing a Rust provider adapter, provider request option, streamed assistant event, transport timeout, or provider error mapping. The provider layer is a protocol boundary: all adapters must expose one provider-independent service contract even when upstream wire formats differ.
+
+### 2. Signatures
+
+- Service: `ModelService::stream<'a>(&'a self, ModelRequest, &'a dyn Cancellation) -> ModelFuture<'a>`.
+- Cancellation: `Cancellation::cancelled(&self) -> CancellationFuture<'_>` must wake a pending waiter.
+- Stream: `ModelEventStream<'a>` yields `Result<AssistantMessageEvent, ModelServiceError>`.
+- Configuration: `ProviderAdapterConfig::new(base_url, ProviderTimeouts)` returns an immutable resolved configuration; credentials and proxy values use `SecretString`.
+- Supported adapters: `OpenAiChatAdapter`, `OpenAiResponsesAdapter`, `AnthropicMessagesAdapter`, and `GoogleGenerativeLanguageAdapter`.
+
+### 3. Contracts
+
+- A `ModelRequest` carries the selected model, system prompt, ordered message history, tools, and validated `ModelRequestOptions`.
+- Request options remain provider-independent: temperature, maximum tokens, reasoning level, optional thinking budgets, cache retention, session ID, and tool choice. Adapters map only supported options and fail closed on invalid values.
+- A successful stream emits exactly one `Start`, preserves provider delta order, and ends with exactly one `Done`. The `Done` completion reason must match the assembled message stop reason.
+- Pre-stream failures are returned by `ModelFuture`; established-stream failures are `Err(ModelServiceError)` items. Adapters must not emit `AssistantMessageEvent::Error`.
+- Abrupt EOF before the provider terminal marker is a retryable `Protocol` error. Partial or malformed tool arguments must never be exposed as a successful tool call.
+- Provider response IDs, response model IDs, reasoning signatures, thought signatures, redacted thinking blocks, tool-call IDs, and cache-token usage are retained when the upstream protocol supplies them.
+- Connect, response-header, and body-idle timeouts are independent. Cancellation is observed before dispatch, while waiting for headers, and while consuming the body.
+- Error messages are bounded to 4,096 characters and redact configured authorization/proxy secrets.
+
+### 4. Validation & Error Matrix
+
+| Condition | Canonical result | Retryable |
+| --- | --- | --- |
+| Missing/invalid configuration | `Configuration` | No |
+| HTTP 401 / invalid API key | `Authentication` | No |
+| HTTP 403 / permission denied | `Permission` | No |
+| Context limit exceeded | `ContextOverflow` | No |
+| Billing quota exhausted | `QuotaExceeded` | No |
+| HTTP 429 / throttling | `RateLimit` | Yes |
+| Connect/header/body timeout | `Timeout` | Yes |
+| Network failure | `Network` | Yes |
+| HTTP 502–504 / unavailable | `Unavailable` | Yes |
+| Provider/server overload | `Server` | Yes |
+| User cancellation | `Cancelled` | No |
+| Malformed SSE, invalid UTF-8, invalid event order, or abrupt EOF | `Protocol` | Depends on whether retry can safely replay |
+
+Provider codes override ambiguous HTTP status classification. Hard non-retryable categories remain non-retryable even if an upstream payload claims otherwise. Preserve `http_status`, `provider_code`, and `retry_after_ms` when available.
+
+### 5. Good / Base / Bad Cases
+
+- Good: OpenAI parallel tool-call fragments are coalesced by stable call index while text and reasoning deltas remain ordered.
+- Good: Anthropic signed thinking and Google thought signatures survive history replay and the streamed response.
+- Base: a text-only response produces `Start`, ordered text deltas, usage, and a matching `Done`.
+- Bad: treating socket EOF as successful completion because some text was already received.
+- Bad: retrying authentication, quota, context-overflow, or cancellation failures.
+- Bad: making adapter contract tests depend on live credentials or paid provider calls.
+
+### 6. Tests Required
+
+- Each adapter needs request-mapping, mixed-content streaming, usage, terminal-marker, abrupt-EOF, malformed-tool, and representative HTTP/provider-error assertions where supported.
+- Cross-protocol tests must run the same canonical text-stream contract against every adapter plus the faux provider.
+- Transport tests must distinguish connect/header/body-idle timeouts and prove cancellation wakes pending header/body work.
+- SSE tests must cover arbitrary byte splits, UTF-8 splits, multiline data, comments, line-ending variants, invalid UTF-8, and bounded event size.
+- Fixture rows move to `verified` only when their `runner` points to the actual passing contract test.
+- Tests use the faux provider or a one-shot `127.0.0.1` server; no real provider endpoint, token, or billable request is allowed.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```rust
+// EOF is not proof that a provider completed the response.
+if upstream.next().await.is_none() {
+    return Ok(done_from_partial_message());
+}
+```
+
+Correct:
+
+```rust
+if upstream.next().await.is_none() && !saw_provider_terminal_marker {
+    return Err(ModelServiceError::protocol(
+        "provider stream ended before its terminal marker",
+        true,
+    ));
+}
+```
+
+Keep protocol-specific parsing inside `pi-provider`; downstream runtime crates consume only `ModelService`, `ModelEventStream`, canonical events, and canonical errors.

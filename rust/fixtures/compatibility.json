@@ -44,6 +44,61 @@
       "runner": "rust/crates/pi-protocol/tests/contracts.rs",
       "normalizers": [],
       "state": "verified"
+    },
+    {
+      "id": "m1.provider.openai-chat",
+      "milestone": "M1",
+      "area": "provider-protocol",
+      "owner": "pi-provider",
+      "oracle": "packages/ai/src/api/openai-completions.ts",
+      "fixture": "rust/fixtures/providers/openai-chat.json",
+      "runner": "rust/crates/pi-provider/tests/openai_chat_contract.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.provider.openai-responses",
+      "milestone": "M1",
+      "area": "provider-protocol",
+      "owner": "pi-provider",
+      "oracle": "packages/ai/src/api/openai-responses-shared.ts",
+      "fixture": "rust/fixtures/providers/openai-responses.json",
+      "runner": "rust/crates/pi-provider/tests/openai_responses_contract.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.provider.anthropic-messages",
+      "milestone": "M1",
+      "area": "provider-protocol",
+      "owner": "pi-provider",
+      "oracle": "packages/ai/src/api/anthropic-messages.ts",
+      "fixture": "rust/fixtures/providers/anthropic-messages.json",
+      "runner": "rust/crates/pi-provider/tests/anthropic_contract.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.provider.google-generative-language",
+      "milestone": "M1",
+      "area": "provider-protocol",
+      "owner": "pi-provider",
+      "oracle": "packages/ai/src/api/google-generative-ai.ts",
+      "fixture": "rust/fixtures/providers/google-generative-language.json",
+      "runner": "rust/crates/pi-provider/tests/google_contract.rs",
+      "normalizers": ["/runtime/generatedToolCallId"],
+      "state": "verified"
+    },
+    {
+      "id": "m1.provider.faux",
+      "milestone": "M1",
+      "area": "provider-protocol",
+      "owner": "pi-provider",
+      "oracle": "packages/ai/src/providers/faux.ts",
+      "fixture": "rust/fixtures/providers/faux.json",
+      "runner": "rust/crates/pi-test-support/tests/faux_contract.rs",
+      "normalizers": ["/runtime/generatedTimestamp"],
+      "state": "verified"
     }
   ]
 }

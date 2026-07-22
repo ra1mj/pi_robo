@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "protocol": "google_generative_language",
+  "requestCases": [
+    {
+      "id": "system-thinking-tools-image",
+      "canonical": {
+        "systemPrompt": "Use tools precisely.",
+        "reasoning": "high",
+        "toolChoice": "required",
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              { "type": "text", "text": "inspect" },
+              { "type": "image", "mimeType": "image/png", "data": "aW1hZ2U=" }
+            ]
+          }
+        ]
+      },
+      "wire": {
+        "model": "gemini-3-pro-preview",
+        "contents": [
+          {
+            "role": "user",
+            "parts": [
+              { "text": "inspect" },
+              { "inlineData": { "mimeType": "image/png", "data": "aW1hZ2U=" } }
+            ]
+          }
+        ],
+        "config": {
+          "systemInstruction": "Use tools precisely.",
+          "thinkingConfig": { "includeThoughts": true, "thinkingLevel": "HIGH" },
+          "toolConfig": { "functionCallingConfig": { "mode": "ANY" } },
+          "tools": [
+            {
+              "functionDeclarations": [
+                {
+                  "name": "inspect",
+                  "description": "Inspect input",
+                  "parametersJsonSchema": { "type": "object", "properties": {} }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "signed-tool-call-and-multimodal-result",
+      "canonical": {
+        "toolCall": { "id": "call_1", "name": "inspect", "arguments": {}, "thoughtSignature": "QUFBQQ==" },
+        "toolResult": [
+          { "type": "text", "text": "red circle" },
+          { "type": "image", "mimeType": "image/png", "data": "aW1hZ2U=" }
+        ]
+      },
+      "wire": [
+        {
+          "role": "model",
+          "parts": [
+            { "functionCall": { "name": "inspect", "args": {} }, "thoughtSignature": "QUFBQQ==" }
+          ]
+        },
+        {
+          "role": "user",
+          "parts": [
+            {
+              "functionResponse": {
+                "name": "inspect",
+                "response": { "output": "red circle" },
+                "parts": [{ "inlineData": { "mimeType": "image/png", "data": "aW1hZ2U=" } }]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "streamCases": [
+    {
+      "id": "thinking-text-tool",
+      "wire": [
+        "data: {\"responseId\":\"google-resp-1\",\"candidates\":[{\"content\":{\"parts\":[{\"thought\":true,\"text\":\"think\",\"thoughtSignature\":\"QUFBQQ==\"}]}}]}\n\n",
+        "data: {\"responseId\":\"google-resp-1\",\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"answer\"},{\"functionCall\":{\"id\":\"call_1\",\"name\":\"inspect\",\"args\":{}},\"thoughtSignature\":\"QUFBQQ==\"}]},\"finishReason\":\"STOP\"}],\"usageMetadata\":{\"promptTokenCount\":20,\"candidatesTokenCount\":5,\"thoughtsTokenCount\":3,\"cachedContentTokenCount\":4,\"totalTokenCount\":28}}\n\n"
+      ],
+      "expected": {
+        "terminal": "toolUse",
+        "responseId": "google-resp-1",
+        "contentTypes": ["thinking", "text", "toolCall"],
+        "usage": { "input": 16, "output": 8, "cacheRead": 4, "cacheWrite": 0, "reasoning": 3, "totalTokens": 28 }
+      }
+    },
+    {
+      "id": "safety-block",
+      "wire": [
+        "data: {\"candidates\":[{\"finishReason\":\"SAFETY\"}]}\n\n"
+      ],
+      "expected": { "terminal": "provider_error", "category": "invalid_request", "retryable": false }
+    }
+  ],
+  "errorCases": [
+    { "id": "authentication", "status": 401, "providerCode": "UNAUTHENTICATED", "category": "authentication", "retryable": false, "retryAfterMs": null },
+    { "id": "permission", "status": 403, "providerCode": "PERMISSION_DENIED", "category": "permission", "retryable": false, "retryAfterMs": null },
+    { "id": "quota", "status": 429, "providerCode": "RESOURCE_EXHAUSTED", "message": "quota exceeded", "category": "quota_exceeded", "retryable": false, "retryAfterMs": null },
+    { "id": "unavailable", "status": 503, "providerCode": "UNAVAILABLE", "category": "unavailable", "retryable": true, "retryAfterMs": 2000 },
+    { "id": "cancelled", "status": null, "providerCode": null, "category": "cancelled", "retryable": false, "retryAfterMs": null }
+  ],
+  "runtime": { "generatedToolCallId": "<generated-tool-call-id>" },
+  "allowedNondeterminism": ["/runtime/generatedToolCallId"],
+  "unsupported": [
+    "unsigned tool-call compatibility bypasses",
+    "Vertex authentication",
+    "automatic adapter retries"
+  ]
+}

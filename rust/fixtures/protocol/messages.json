@@ -36,6 +36,8 @@
     "api": "openai-responses",
     "provider": "openai",
     "model": "example",
+    "responseModel": "resolved-example",
+    "responseId": "resp-example",
     "usage": {
       "input": 10,
       "output": 5,
@@ -62,6 +64,12 @@
         "type": "text",
         "text": "contents"
       }
+    ],
+    "details": {
+      "path": "README.md"
+    },
+    "addedToolNames": [
+      "late_tool"
     ],
     "isError": false,
     "timestamp": 1002

@@ -231,6 +231,10 @@ pub struct AssistantMessage {
     pub api: String,
     pub provider: String,
     pub model: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub response_model: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub response_id: Option<String>,
     pub usage: Usage,
     pub stop_reason: StopReason,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -259,6 +263,8 @@ impl AssistantMessage {
             api: api.into(),
             provider: provider.into(),
             model: model.into(),
+            response_model: None,
+            response_id: None,
             usage,
             stop_reason,
             error_message: None,
@@ -283,6 +289,10 @@ pub struct ToolResultMessage {
     pub tool_call_id: String,
     pub tool_name: String,
     pub content: Vec<ContentBlock>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub details: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub added_tool_names: Option<Vec<String>>,
     pub is_error: bool,
     pub timestamp: u64,
     #[serde(default, flatten, skip_serializing_if = "Extensions::is_empty")]
@@ -303,6 +313,8 @@ impl ToolResultMessage {
             tool_call_id: tool_call_id.into(),
             tool_name: tool_name.into(),
             content,
+            details: None,
+            added_tool_names: None,
             is_error,
             timestamp,
             extensions: Extensions::new(),

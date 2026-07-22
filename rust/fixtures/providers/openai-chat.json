@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "protocol": "openai_chat",
+  "requestCases": [
+    {
+      "id": "minimal",
+      "canonical": {
+        "systemPrompt": "Be concise.",
+        "messages": [{ "role": "user", "content": "hello", "timestamp": 1 }],
+        "options": { "maxTokens": 128, "cacheRetention": "none" }
+      },
+      "wire": {
+        "model": "chat-model",
+        "messages": [
+          { "role": "system", "content": "Be concise." },
+          { "role": "user", "content": "hello" }
+        ],
+        "stream": true,
+        "stream_options": { "include_usage": true },
+        "store": false,
+        "max_completion_tokens": 128
+      }
+    },
+    {
+      "id": "reasoning-tools-images-cache",
+      "canonical": {
+        "sessionId": "session-chat-1",
+        "cacheRetention": "long",
+        "reasoning": "high",
+        "toolChoice": { "named": "read" },
+        "image": { "mimeType": "image/png", "data": "aW1hZ2U=" }
+      },
+      "wire": {
+        "prompt_cache_key": "session-chat-1",
+        "prompt_cache_retention": "24h",
+        "reasoning_effort": "high",
+        "tool_choice": { "type": "function", "function": { "name": "read" } },
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "read",
+              "description": "Read a file",
+              "parameters": { "type": "object", "properties": { "path": { "type": "string" } } },
+              "strict": false
+            }
+          }
+        ],
+        "image_url": "data:image/png;base64,aW1hZ2U=",
+        "emptyToolResult": "(no tool output)"
+      }
+    }
+  ],
+  "streamCases": [
+    {
+      "id": "mixed-content-and-tool-call",
+      "wire": [
+        "data: {\"id\":\"chatcmpl-1\",\"model\":\"routed-model\",\"choices\":[{\"index\":0,\"delta\":{\"reasoning_content\":\"think \"},\"finish_reason\":null}]}\n\n",
+        "data: {\"id\":\"chatcmpl-1\",\"model\":\"routed-model\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"answer\",\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"read\",\"arguments\":\"{\\\"path\\\":\\\"README.md\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":20,\"completion_tokens\":8,\"prompt_tokens_details\":{\"cached_tokens\":5,\"cache_write_tokens\":3},\"completion_tokens_details\":{\"reasoning_tokens\":2}}}\n\n",
+        "data: [DONE]\n\n"
+      ],
+      "expected": {
+        "eventTypes": [
+          "start",
+          "thinking_start",
+          "thinking_delta",
+          "text_start",
+          "text_delta",
+          "toolcall_start",
+          "toolcall_delta",
+          "thinking_end",
+          "text_end",
+          "toolcall_end",
+          "done"
+        ],
+        "terminal": "toolUse",
+        "responseId": "chatcmpl-1",
+        "responseModel": "routed-model",
+        "usage": { "input": 12, "output": 8, "cacheRead": 5, "cacheWrite": 3, "reasoning": 2, "totalTokens": 28 }
+      }
+    },
+    {
+      "id": "missing-finish-reason",
+      "wire": [
+        "data: {\"id\":\"chatcmpl-truncated\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"partial\"},\"finish_reason\":null}]}\n\n"
+      ],
+      "expected": { "terminal": "protocol_error", "retryable": true }
+    }
+  ],
+  "errorCases": [
+    { "id": "authentication", "status": 401, "providerCode": "invalid_api_key", "category": "authentication", "retryable": false, "retryAfterMs": null },
+    { "id": "quota", "status": 429, "providerCode": "insufficient_quota", "category": "quota_exceeded", "retryable": false, "retryAfterMs": null },
+    { "id": "throttle", "status": 429, "providerCode": "rate_limit", "category": "rate_limit", "retryable": true, "retryAfterMs": 1500 },
+    { "id": "context", "status": 400, "providerCode": "context_length_exceeded", "category": "context_overflow", "retryable": false, "retryAfterMs": null },
+    { "id": "abrupt-eof", "status": null, "providerCode": null, "category": "protocol", "retryable": true, "retryAfterMs": null }
+  ],
+  "allowedNondeterminism": [],
+  "unsupported": [
+    "automatic adapter retries",
+    "websocket transport",
+    "provider-specific payload callbacks"
+  ]
+}

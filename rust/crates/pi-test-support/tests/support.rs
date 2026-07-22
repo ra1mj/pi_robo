@@ -1,5 +1,10 @@
-use pi_model::{ModelRequest, ModelService};
-use pi_protocol::{Model, ModelCost};
+use futures_core::Stream;
+use pi_model::{
+    Cancellation, ModelRequest, ModelRequestOptions, ModelService, ModelServiceErrorCategory,
+};
+use pi_protocol::{
+    AssistantMessage, AssistantMessageEvent, Extensions, Model, ModelCost, StopReason, Usage,
+};
 use pi_test_support::{
     DeterministicIds, FakeCancellation, FakeClock, FakeSleeper, InMemoryEventSink, LocalHttpServer,
     NormalizationRule, ScriptedModelService, fixture_path, normalize_json, scan_fixture_tree,
@@ -8,7 +13,10 @@ use serde_json::json;
 use std::error::Error;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::task::{Context, Poll, Waker};
+use std::pin::Pin;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::task::{Context, Poll, Wake, Waker};
 use std::time::Duration;
 
 #[test]
@@ -73,11 +81,117 @@ fn scripted_model_honors_cancellation_before_consuming_events() {
         system_prompt: String::new(),
         messages: Vec::new(),
         tools: Vec::new(),
+        options: ModelRequestOptions::default(),
     };
     let mut future = service.stream(request, &cancellation);
     let mut context = Context::from_waker(Waker::noop());
     let result = future.as_mut().poll(&mut context);
-    assert!(matches!(result, Poll::Ready(Err(error)) if error.category == "cancelled"));
+    assert!(matches!(
+        result,
+        Poll::Ready(Err(error)) if error.category == ModelServiceErrorCategory::Cancelled
+    ));
+}
+
+#[derive(Default)]
+struct WakeCounter(AtomicUsize);
+
+impl Wake for WakeCounter {
+    fn wake(self: Arc<Self>) {
+        self.0.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.0.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+#[test]
+fn pending_cancellation_waiter_is_woken_once() {
+    let cancellation = FakeCancellation::default();
+    let counter = Arc::new(WakeCounter::default());
+    let waker = Waker::from(Arc::clone(&counter));
+    let mut context = Context::from_waker(&waker);
+    let mut cancelled = cancellation.cancelled();
+
+    assert!(matches!(
+        cancelled.as_mut().poll(&mut context),
+        Poll::Pending
+    ));
+    cancellation.cancel();
+    assert_eq!(counter.0.load(Ordering::SeqCst), 1);
+    assert!(matches!(
+        cancelled.as_mut().poll(&mut context),
+        Poll::Ready(())
+    ));
+    cancellation.cancel();
+    assert_eq!(counter.0.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn established_stream_turns_abrupt_eof_into_one_protocol_failure() {
+    let partial = AssistantMessage::new(
+        Vec::new(),
+        "test",
+        "test",
+        "example",
+        Usage::default(),
+        StopReason::Stop,
+        1,
+    );
+    let service = ScriptedModelService::new(vec![Ok(AssistantMessageEvent::Start {
+        partial,
+        extensions: Extensions::new(),
+    })]);
+    let cancellation = FakeCancellation::default();
+    let mut service_future = service.stream(model_request(), &cancellation);
+    let mut context = Context::from_waker(Waker::noop());
+    let Poll::Ready(Ok(mut stream)) = service_future.as_mut().poll(&mut context) else {
+        panic!("scripted service must establish a stream immediately");
+    };
+
+    assert!(matches!(
+        Pin::new(&mut stream).poll_next(&mut context),
+        Poll::Ready(Some(Ok(AssistantMessageEvent::Start { .. })))
+    ));
+    assert!(matches!(
+        Pin::new(&mut stream).poll_next(&mut context),
+        Poll::Ready(Some(Err(error)))
+            if error.category == ModelServiceErrorCategory::Protocol && error.retryable
+    ));
+    assert!(matches!(
+        Pin::new(&mut stream).poll_next(&mut context),
+        Poll::Ready(None)
+    ));
+}
+
+fn model_request() -> ModelRequest {
+    ModelRequest {
+        model: Model {
+            id: "example".to_owned(),
+            name: "Example".to_owned(),
+            api: "test".to_owned(),
+            provider: "test".to_owned(),
+            base_url: "http://127.0.0.1".to_owned(),
+            reasoning: false,
+            input: Vec::new(),
+            cost: ModelCost {
+                input: 0.0,
+                output: 0.0,
+                cache_read: 0.0,
+                cache_write: 0.0,
+            },
+            context_window: 1,
+            max_tokens: 1,
+            headers: None,
+            compat: None,
+            thinking_level_map: None,
+            extensions: Default::default(),
+        },
+        system_prompt: String::new(),
+        messages: Vec::new(),
+        tools: Vec::new(),
+        options: ModelRequestOptions::default(),
+    }
 }
 
 #[test]
