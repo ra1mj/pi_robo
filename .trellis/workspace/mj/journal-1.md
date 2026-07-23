@@ -171,3 +171,36 @@ Implemented the side-by-side Linux x64 pi-rs text/JSON CLI, production provider 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Fix Rust CI interoperability setup
+
+**Date**: 2026-07-23
+**Task**: Fix Rust CI interoperability setup
+**Branch**: `main`
+
+### Summary
+
+Reproduced the Rust CI failure from a clean archive, identified the missing tsx dependency for the pi-store TypeScript session interoperability test, added pinned Node setup plus npm ci --ignore-scripts to the isolated Rust job, and recorded the clean-checkout dependency contract.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `379ff3f9` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
