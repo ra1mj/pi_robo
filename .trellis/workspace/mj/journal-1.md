@@ -105,3 +105,36 @@ Implemented and verified the provider-neutral Rust agent loop, read/bash/edit/wr
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Rust data resources and trust
+
+**Date**: 2026-07-23
+**Task**: Rust data resources and trust
+**Branch**: `main`
+
+### Summary
+
+Implemented read-only Rust settings/models/auth/trust stores, append-only session-v3 interoperability, context/skill/prompt resources, compatibility fixtures, and full contract gates.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5fdf308d` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
