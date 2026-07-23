@@ -354,6 +354,7 @@ Use this scenario when changing `pi-cli`, the `pi-rs` process boundary, headless
 - Text stdout is final assistant text only. JSON stdout starts with one v3 session header and then compact compatible events. Diagnostics and redacted failures use stderr.
 - `--approve` gates protected project settings/skills; it is not a tool sandbox. `--offline` disables implicit startup networking; it does not block the explicitly selected provider call.
 - The CI artifact job depends on the complete Rust check job and never changes the tag release workflow. It uploads `pi-rs-linux-x64-<commit>.tar.gz`, `SHA256SUMS`, and `build-info.json`.
+- The locked Rust workspace suite includes `pi-store/tests/typescript_interop.rs`, which executes `node_modules/.bin/tsx`. An isolated Rust CI job must set up the pinned Node version and run `npm ci --ignore-scripts` before `cargo test`; a developer checkout with pre-existing `node_modules` is not evidence that this dependency is present in CI.
 - Build info schema 1 contains `sourceCommit`, `workspaceVersion`, GNU x64 `target`, `release` profile, exact `rustc`/`cargo` versions, and the `Cargo.lock` SHA-256 digest.
 
 ### 4. Validation & Error Matrix
@@ -367,6 +368,7 @@ Use this scenario when changing `pi-cli`, the `pi-rs` process boundary, headless
 | Missing stored session cwd, legacy mutation, or stale writer | Actionable store error before a prompt |
 | Terminal failed/cancelled run | Terminal JSON event where applicable, stderr failure, exit 1 |
 | SIGHUP / SIGINT / SIGTERM | Cancel provider/tools, settle output/session work, exit 129 / 130 / 143 |
+| Missing `node_modules/.bin/tsx` in the Rust CI job | Install the locked npm tree with scripts disabled before running workspace tests |
 | Existing artifact output directory or non-GNU-x64 target | Packaging fails closed without deleting the directory |
 | Artifact checksum/provenance mismatch | CI fails before upload |
 
@@ -385,6 +387,7 @@ Use this scenario when changing `pi-cli`, the `pi-rs` process boundary, headless
 - Composition: `initialization_contract`, `input_contract`, `model_tool_contract`, `session_contract`, `output_contract`, and `signal_cleanup`.
 - End to end: `headless_smoke` injects Faux; `protocol_smoke` covers all four network protocols on `127.0.0.1`; `binary_protocol_smoke` executes the production binary in text/JSON; `no_node_runtime` clears `PATH`.
 - CI must format, run locked workspace Clippy/tests/Rustdoc/dependency audit, package release GNU x64, unpack outside the checkout, verify checksums/build info, and run the packaged binary protocol test.
+- Reproduce CI dependency failures from a clean archive/worktree. Do not validate cross-language tests only in a checkout whose `node_modules` predates the workflow change.
 - Required repository gate remains `npm run check`; no live provider, credential, npm release, tag workflow, or public GitHub Release is part of this scenario.
 
 ### 7. Wrong vs Correct
