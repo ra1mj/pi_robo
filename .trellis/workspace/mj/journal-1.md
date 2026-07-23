@@ -138,3 +138,36 @@ Implemented read-only Rust settings/models/auth/trust stores, append-only sessio
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Implement Rust headless CLI
+
+**Date**: 2026-07-23
+**Task**: Implement Rust headless CLI
+**Branch**: `main`
+
+### Summary
+
+Implemented the side-by-side Linux x64 pi-rs text/JSON CLI, production provider composition, sessions/resources/tools/signals, local protocol contracts, CI artifact packaging, checksums, documentation, and full local quality gates.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7a5f912d` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
