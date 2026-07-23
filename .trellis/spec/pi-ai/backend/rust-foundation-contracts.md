@@ -243,3 +243,91 @@ history.extend(sort_results_by_source_index(completed));
 ```
 
 Keep provider wire behavior in `pi-provider`, low-level turn ordering in `pi-agent`, filesystem/process behavior in `pi-tools`, and retry/compaction/session coordination in `pi-runtime`.
+
+## Scenario: Rust Data, Resources, and Trust
+
+### 1. Scope / Trigger
+
+Use this scenario when changing Rust paths, settings, `models.json`, API-key auth, trust, session-v3 persistence, context discovery, skill discovery, or system-prompt inputs. These boundaries share read-only configuration and append-only compatibility requirements with `packages/coding-agent`.
+
+### 2. Signatures
+
+- Paths: `StorePaths::new(agent_home, cwd, home) -> Result<StorePaths, StoreError>`.
+- Settings: `load_settings(&StorePaths, project_trusted) -> Result<SettingsSnapshot, StoreError>`.
+- Models: `load_model_sources(&StorePaths) -> Result<ModelSourceSnapshot, StoreError>`.
+- Auth: `resolve_credential(CredentialRequest, &AuthDocument, &dyn ProcessRunner, &dyn CommandCancellation) -> Result<ResolvedCredential, StoreError>`.
+- Trust: `resolve_trust(TrustRequest, &TrustDocument) -> Result<(TrustDecision, Vec<ResourceAccess>), StoreError>`.
+- Session read/write: `SessionFileSnapshot::read(path)` and `SessionWriter::{create,open,append}`.
+- Resource loading: `discover_context(&StorePaths, disabled)` and `discover_skills(SkillDiscoveryRequest)`.
+- Prompt projection: `assemble_system_prompt(&SystemPromptInput) -> String`.
+
+### 3. Contracts
+
+- Settings, models, auth, and trust are read-only in milestone 1. Reads never create config directories, lock files, or normalized rewrites.
+- Trusted project settings merge over global settings at the top level; when both values are objects, merge exactly one nested level. Arrays and primitives replace.
+- Credential precedence is caller CLI override, `auth.json` API-key record, provider environment, then `models.json` key. OAuth records remain raw but cannot execute or refresh.
+- Config values support literals, `$VAR`, `${VAR}`, `$$`, `$!`, and `!command`. Invalid environment-reference syntax remains literal. Command execution uses injected environment/cwd/cancellation with 10-second and 64-KiB defaults.
+- Debug output for credentials, command strings, environment values, and model keys is redacted.
+- Direct milestone-1 built-in brands are `openai`, `anthropic`, and `google`; user-defined providers are allowed only with a selected supported protocol. Other embedded brands are not returned by `supported_model`.
+- The nearest canonical saved trust ancestor wins. Explicit caller decisions win over saved/default decisions. Headless `ask` skips protected project settings and skills.
+- Context files are not protected by project trust. They load global-first, then filesystem-root-to-cwd, unless context loading itself is disabled.
+- Session writes require v3, append one compact JSON object plus newline, preserve every prior byte, and reject detectable external metadata/length changes. This is not a cross-process lock or a concurrent TypeScript/Rust writer guarantee.
+- Session reads retain raw lines, malformed-line diagnostics, unknown fields, and unknown record kinds. v1/v2 are inspection-only and never migrated by Rust.
+- Skill collisions keep the first source, exact canonical duplicates are silent, root `SKILL.md` stops recursion, ignore files apply, and `disable-model-invocation` omits a skill from prompt XML.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Invalid settings JSON | Empty typed view plus structured diagnostic; bytes unchanged |
+| Invalid models/auth/trust JSON or shape | Structured `StoreError` with path/line where available |
+| OAuth without an API-key fallback | `UnsupportedOauth` guidance; record unchanged |
+| Missing credential | `Authentication`; never include secret values |
+| Command timeout/cancellation/output overflow | `Timeout` / `Cancelled` / `OutputLimit` |
+| Unsupported custom model protocol | Diagnostic; model is not advertised |
+| Saved denial or headless `ask` | Context loads; project settings/skills skip |
+| Session first non-empty line is not a valid header | `InvalidShape`; file unchanged |
+| Session version 1/2 append | `UnsupportedVersion`; no migration or write |
+| Detectable external session append/change | `StaleSession`; caller must reload |
+| Same-session simultaneous TypeScript/Rust writers | Unsupported; no safety claim |
+
+### 5. Good / Base / Bad Cases
+
+- Good: TypeScript reads a Rust-appended v3 record, then Rust reads a later TypeScript append while every earlier line remains byte-identical.
+- Good: saved project denial still loads ancestor `AGENTS.md` but omits `.pi/settings.json` and `.pi/skills`.
+- Base: missing config files produce empty read-only snapshots without creating `~/.pi/agent`.
+- Bad: treating project context as trust-protected.
+- Bad: logging a `CredentialRequest`, configured command, or environment map with raw values.
+- Bad: rewriting a session to normalize unknown records or to migrate v1/v2.
+
+### 6. Tests Required
+
+- `pi-store`: `paths_contract`, `settings_contract`, `models_contract`, `auth_contract`, `config_value_contract`, `trust_matrix`, `session_v3_contract`, and `typescript_interop`.
+- `pi-resources`: `context_contract`, `skills_contract`, `system_prompt_contract`, and `trust_matrix`.
+- Assertion points include unchanged config bytes, no lock creation, precedence/provenance, command limits/redaction, context-versus-protected-resource trust behavior, unknown session preservation, prior-line byte prefixes, legacy refusal, stale-writer refusal, and bidirectional TypeScript/Rust reads.
+- Compatibility rows become `verified` only after their named runner passes.
+- Required gates: locked format/Clippy/tests, `cargo deny check`, and `npm run check`.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```rust
+if !trust.trusted {
+    context_files.clear();
+}
+```
+
+This changes current headless behavior and conflates instruction loading with sandboxing.
+
+Correct:
+
+```rust
+let context = discover_context(&paths, no_context_files)?;
+let project_skills = discover_skills(SkillDiscoveryRequest {
+    project_trusted: trust.trusted,
+    ..request
+})?;
+```
+
+Keep context loading independent, and gate only protected project settings/skills. Do not describe trust as tool containment or a security sandbox.

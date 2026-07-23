@@ -132,6 +132,83 @@
       "runner": "rust/crates/pi-runtime/tests/retry_contract.rs",
       "normalizers": [],
       "state": "verified"
+    },
+    {
+      "id": "m1.store.settings",
+      "milestone": "M1",
+      "area": "settings",
+      "owner": "pi-store",
+      "oracle": "packages/coding-agent/src/core/settings-manager.ts",
+      "fixture": "rust/fixtures/store/settings.json",
+      "runner": "rust/crates/pi-store/tests/settings_contract.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot"
+      ],
+      "state": "verified"
+    },
+    {
+      "id": "m1.store.models",
+      "milestone": "M1",
+      "area": "model-sources",
+      "owner": "pi-store",
+      "oracle": "packages/coding-agent/src/core/model-registry.ts",
+      "fixture": "rust/fixtures/store/models.json",
+      "runner": "rust/crates/pi-store/tests/models_contract.rs",
+      "normalizers": [],
+      "state": "verified"
+    },
+    {
+      "id": "m1.store.auth",
+      "milestone": "M1",
+      "area": "auth",
+      "owner": "pi-store",
+      "oracle": "packages/coding-agent/src/core/auth-storage.ts",
+      "fixture": "rust/fixtures/store/auth-trust.json",
+      "runner": "rust/crates/pi-store/tests/auth_contract.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot"
+      ],
+      "state": "verified"
+    },
+    {
+      "id": "m1.store.trust",
+      "milestone": "M1",
+      "area": "trust",
+      "owner": "pi-store",
+      "oracle": "packages/coding-agent/src/core/trust-manager.ts",
+      "fixture": "rust/fixtures/store/auth-trust.json",
+      "runner": "rust/crates/pi-store/tests/trust_matrix.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot"
+      ],
+      "state": "verified"
+    },
+    {
+      "id": "m1.store.session-v3",
+      "milestone": "M1",
+      "area": "session-store",
+      "owner": "pi-store",
+      "oracle": "packages/coding-agent/src/core/session-manager.ts",
+      "fixture": "rust/fixtures/sessions/session-v3.jsonl",
+      "runner": "rust/crates/pi-store/tests/session_v3_contract.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot",
+        "/runtime/generatedTimestamp"
+      ],
+      "state": "verified"
+    },
+    {
+      "id": "m1.resources.discovery-trust",
+      "milestone": "M1",
+      "area": "resources",
+      "owner": "pi-resources",
+      "oracle": "packages/coding-agent/src/core/resource-loader.ts",
+      "fixture": "rust/fixtures/resources/discovery.json",
+      "runner": "rust/crates/pi-resources/tests/trust_matrix.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot"
+      ],
+      "state": "verified"
     }
   ]
 }

@@ -384,6 +384,15 @@ pub struct PersistedSessionRecord {
 }
 
 impl PersistedSessionRecord {
+    /// Construct an appendable record from a canonical typed representation.
+    pub fn from_known(known: KnownSessionRecord) -> Result<Self, ContractError> {
+        let raw = known.to_value()?;
+        Ok(Self {
+            raw,
+            known: Some(known),
+        })
+    }
+
     /// Parse one JSONL record and produce a typed view when its type is recognized.
     pub fn parse(line: &str) -> Result<Self, ContractError> {
         let raw: Value = serde_json::from_str(line).map_err(ContractError::invalid_json)?;

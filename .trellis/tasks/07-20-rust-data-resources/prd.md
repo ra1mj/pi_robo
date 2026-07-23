@@ -1,5 +1,9 @@
 # Rust data resources and trust
 
+## Status
+
+Planning converged and implementation was approved on 2026-07-23. The archived `rust-foundation-contracts` dependency is verified complete.
+
 ## Goal
 
 Implement the milestone-1 settings, model, API-key, session-v3, project-context, skill-discovery, and trust resources needed by the Rust headless CLI.
@@ -18,11 +22,11 @@ Implement the milestone-1 settings, model, API-key, session-v3, project-context,
 
 ## Acceptance Criteria
 
-- [ ] Fixture tests prove the documented CLI/auth/env/models precedence and actionable failures for invalid sources.
-- [ ] Session-v3 fixtures pass append, reload, rollback, malformed-line, unknown-field, and TypeScript/Rust mutual-read tests.
-- [ ] Tests reject or clearly diagnose concurrent same-session writer scenarios rather than implying safety.
-- [ ] Trust fixtures prove context loading is independent from protected project settings/skills, and cover saved, default, CLI, and non-interactive `ask` decisions.
-- [ ] Resource tests use isolated temporary homes/projects and never modify a developer's real configuration.
+- [x] Fixture tests prove the documented CLI/auth/env/models precedence and actionable failures for invalid sources.
+- [x] Session-v3 fixtures pass append, reload, rollback, malformed-line, unknown-field, and TypeScript/Rust mutual-read tests.
+- [x] Tests reject or clearly diagnose concurrent same-session writer scenarios rather than implying safety.
+- [x] Trust fixtures prove context loading is independent from protected project settings/skills, and cover saved, default, CLI, and non-interactive `ask` decisions.
+- [x] Resource tests use isolated temporary homes/projects and never modify a developer's real configuration.
 
 ## Out of Scope
 
@@ -32,3 +36,9 @@ Implement the milestone-1 settings, model, API-key, session-v3, project-context,
 
 - Source of truth: `../07-17-rust-rewrite/prd.md`, `../07-17-rust-rewrite/design.md`, and `../07-17-rust-rewrite/implement.md`.
 - Directory hierarchy is not a dependency; the completion check above is mandatory.
+
+## Completion Evidence
+
+- `pi-store` contract runners cover paths/settings/models/auth/config values/trust/session-v3 and bidirectional TypeScript interoperability.
+- `pi-resources` contract runners cover context/skills/system-prompt inputs and the corrected trust matrix.
+- Format, locked Clippy/tests, Rustdoc warnings, `cargo deny check`, compatibility/workspace policy tests, and `npm run check` passed on 2026-07-23.

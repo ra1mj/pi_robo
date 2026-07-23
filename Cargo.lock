@@ -953,6 +953,8 @@ name = "pi-store"
 version = "0.1.0"
 dependencies = [
  "pi-protocol",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

@@ -1,31 +1,28 @@
-//! Session storage contracts without a filesystem or database implementation.
+//! Read-only configuration stores and append-only session-v3 persistence.
 
-use pi_protocol::PersistedSessionRecord;
-use std::future::Future;
-use std::pin::Pin;
+mod auth;
+mod error;
+mod models;
+mod paths;
+mod session;
+mod settings;
+mod trust;
 
-/// Storage error independent of a concrete backend.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StoreError {
-    pub message: String,
-}
-
-impl std::fmt::Display for StoreError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(&self.message)
-    }
-}
-
-impl std::error::Error for StoreError {}
-
-pub type StoreFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, StoreError>> + Send + 'a>>;
-
-/// Append-only session persistence boundary.
-pub trait SessionStore: Send + Sync {
-    fn load<'a>(&'a self, session_id: &'a str) -> StoreFuture<'a, Vec<PersistedSessionRecord>>;
-    fn append<'a>(
-        &'a self,
-        session_id: &'a str,
-        record: &'a PersistedSessionRecord,
-    ) -> StoreFuture<'a, ()>;
-}
+pub use auth::{
+    AuthDocument, AuthRecord, CancellationFuture, CommandCancellation, CommandRequest,
+    CommandResult, ConfigValueSource, CredentialRequest, CredentialSource, NeverCancelled,
+    ProcessFuture, ProcessRunner, ResolvedCredential, SecretString, TokioProcessRunner,
+    resolve_config_value, resolve_credential,
+};
+pub use error::{DiagnosticLevel, StoreDiagnostic, StoreError, StoreErrorCategory};
+pub use models::{ModelSourceSnapshot, load_model_sources, strip_json_comments};
+pub use paths::{StorePaths, canonicalize_for_match, expand_tilde, normalize_path};
+pub use session::{
+    SessionContext, SessionFile, SessionFileSnapshot, SessionIdentitySource, SessionModel,
+    SessionRecordFactory, SessionStore, SessionWriter, SessionWriterState, StoreFuture,
+};
+pub use settings::{SettingsSnapshot, load_settings};
+pub use trust::{
+    ProtectedResource, ResourceAccess, TrustDecision, TrustDecisionSource, TrustDocument,
+    TrustRequest, resolve_trust,
+};

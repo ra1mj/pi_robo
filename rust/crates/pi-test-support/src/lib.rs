@@ -15,7 +15,7 @@ use pi_protocol::{
     AssistantMessage, AssistantMessageEvent, CompletionReason, ContentBlock, Message,
     MessageContent, PersistedSessionRecord, StopReason, TextBlock, ThinkingBlock, Usage,
 };
-use pi_store::{SessionStore, StoreError, StoreFuture};
+use pi_store::{SessionStore, StoreError, StoreErrorCategory, StoreFuture};
 use serde_json::Value;
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{Read, Write};
@@ -644,9 +644,7 @@ impl SessionStore for InMemorySessionStore {
             self.sessions
                 .lock()
                 .map(|sessions| sessions.get(session_id).cloned().unwrap_or_default())
-                .map_err(|_| StoreError {
-                    message: "session store lock poisoned".to_owned(),
-                })
+                .map_err(|_| session_store_lock_error())
         })
     }
 
@@ -656,9 +654,10 @@ impl SessionStore for InMemorySessionStore {
         record: &'a PersistedSessionRecord,
     ) -> StoreFuture<'a, ()> {
         Box::pin(async move {
-            let mut sessions = self.sessions.lock().map_err(|_| StoreError {
-                message: "session store lock poisoned".to_owned(),
-            })?;
+            let mut sessions = self
+                .sessions
+                .lock()
+                .map_err(|_| session_store_lock_error())?;
             sessions
                 .entry(session_id.to_owned())
                 .or_default()
@@ -666,6 +665,10 @@ impl SessionStore for InMemorySessionStore {
             Ok(())
         })
     }
+}
+
+fn session_store_lock_error() -> StoreError {
+    StoreError::new(StoreErrorCategory::Io, "session store lock poisoned")
 }
 
 /// Return a validated path beneath the repository root.

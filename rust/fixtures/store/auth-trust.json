@@ -1,0 +1,29 @@
+{
+  "auth": {
+    "stored-provider": {
+      "type": "api_key",
+      "key": "$STORED_PROVIDER_KEY",
+      "env": {
+        "STORED_PROVIDER_KEY": "stored-secret"
+      }
+    },
+    "oauth-provider": {
+      "type": "oauth",
+      "access": "preserve-access",
+      "refresh": "preserve-refresh",
+      "expires": 4102444800000,
+      "futureOAuthField": true
+    }
+  },
+  "trust": {
+    "/fixture": true,
+    "/fixture/denied": false,
+    "/fixture/project": true
+  },
+  "precedence": [
+    "cli_override",
+    "auth_json_api_key",
+    "provider_environment",
+    "models_json_key"
+  ]
+}

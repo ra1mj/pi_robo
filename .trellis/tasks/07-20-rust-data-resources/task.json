@@ -3,7 +3,7 @@
   "name": "rust-data-resources",
   "title": "Rust data resources and trust",
   "description": "Implement milestone-1 settings, models, auth reads, session-v3 interoperability, resources, and project trust.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

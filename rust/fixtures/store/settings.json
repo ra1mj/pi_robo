@@ -1,0 +1,44 @@
+{
+  "global": {
+    "defaultProvider": "openai",
+    "defaultModel": "global-model",
+    "defaultProjectTrust": "ask",
+    "compaction": {
+      "enabled": true,
+      "reserveTokens": 1200
+    },
+    "skills": [
+      "~/global-skills"
+    ],
+    "futureGlobal": {
+      "preserved": true
+    }
+  },
+  "project": {
+    "defaultModel": "project-model",
+    "compaction": {
+      "keepRecentTokens": 400
+    },
+    "skills": [
+      "./project-skills"
+    ],
+    "futureProject": "preserved"
+  },
+  "expectedTrusted": {
+    "defaultProvider": "openai",
+    "defaultModel": "project-model",
+    "defaultProjectTrust": "ask",
+    "compaction": {
+      "enabled": true,
+      "reserveTokens": 1200,
+      "keepRecentTokens": 400
+    },
+    "skills": [
+      "./project-skills"
+    ],
+    "futureGlobal": {
+      "preserved": true
+    },
+    "futureProject": "preserved"
+  }
+}

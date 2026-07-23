@@ -1,0 +1,30 @@
+{
+  // TypeScript accepts line comments and trailing commas.
+  "providers": {
+    "openai": {
+      "baseUrl": "https://proxy.example.test/v1",
+      "modelOverrides": {
+        "gpt-4.1": {
+          "name": "Fixture GPT",
+        },
+      },
+    },
+    "fixture-custom": {
+      "baseUrl": "https://custom.example.test/v1",
+      "apiKey": "$FIXTURE_CUSTOM_KEY",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "fixture-model",
+          "name": "Fixture Model",
+          "reasoning": false,
+          "input": ["text"],
+          "futureModelField": {
+            "preserved": true
+          },
+        },
+      ],
+      "futureProviderField": "preserved",
+    },
+  },
+}
