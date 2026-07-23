@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "modePrecedence": [
+    { "argv": ["--mode", "json", "-p"], "stdinTty": true, "result": "json" },
+    { "argv": ["--mode", "text"], "stdinTty": true, "result": "text" },
+    { "argv": [], "stdinTty": false, "result": "text" },
+    { "argv": [], "stdinTty": true, "error": "interactive mode" },
+    { "argv": ["positional"], "stdinTty": true, "error": "interactive mode" }
+  ],
+  "toolPrecedence": [
+    {
+      "argv": ["--no-tools", "--tools", "read,bash", "--exclude-tools", "bash"],
+      "enabled": ["read"]
+    },
+    {
+      "argv": ["--exclude-tools", "edit"],
+      "enabled": ["read", "bash", "write"]
+    }
+  ],
+  "sessionConflicts": [
+    ["--continue", "--session", "session.jsonl"],
+    ["--session", "session.jsonl", "--session-id", "exact"],
+    ["--no-session", "--continue"]
+  ],
+  "deferred": [
+    "--resume",
+    "--fork",
+    "--models",
+    "--no-builtin-tools",
+    "--extension",
+    "--no-extensions",
+    "--prompt-template",
+    "--no-prompt-templates",
+    "--theme",
+    "--no-themes",
+    "--export",
+    "--tree",
+    "--verbose"
+  ],
+  "output": {
+    "textStdout": "final assistant text blocks only",
+    "jsonFirstRecord": "session",
+    "diagnostics": "stderr",
+    "success": 0,
+    "failure": 1,
+    "signals": { "SIGHUP": 129, "SIGINT": 130, "SIGTERM": 143 }
+  }
+}

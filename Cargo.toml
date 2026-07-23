@@ -12,6 +12,7 @@ repository = "https://github.com/earendil-works/pi-mono"
 [workspace.dependencies]
 base64 = "=0.22.1"
 bytes = "=1.12.1"
+clap = { version = "=4.6.4", default-features = false, features = ["error-context", "help", "std", "suggestions", "usage"] }
 futures-core = "=0.3.33"
 futures-util = "=0.3.33"
 httpdate = "=1.0.3"
@@ -28,8 +29,10 @@ pi-tools = { path = "rust/crates/pi-tools", version = "=0.1.0" }
 reqwest = { version = "=0.13.4", default-features = false, features = ["rustls", "http2", "system-proxy", "stream", "json", "gzip", "brotli", "deflate"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"
-tokio = { version = "=1.53.1", features = ["macros", "rt-multi-thread", "sync", "time", "net", "io-util", "fs", "process"] }
+time = { version = "=0.3.54", default-features = false, features = ["formatting", "std"] }
+tokio = { version = "=1.53.1", features = ["macros", "rt-multi-thread", "sync", "time", "net", "io-util", "fs", "process", "signal"] }
 unicode-normalization = "=0.1.25"
+uuid = { version = "=1.24.0", features = ["v4", "v7"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

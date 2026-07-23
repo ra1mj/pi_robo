@@ -209,6 +209,20 @@
         "/runtime/temporaryRoot"
       ],
       "state": "verified"
+    },
+    {
+      "id": "m1.cli.headless",
+      "milestone": "M1",
+      "area": "headless-cli",
+      "owner": "pi-cli",
+      "oracle": "packages/coding-agent/src/cli/args.ts",
+      "fixture": "rust/fixtures/cli/contracts.json",
+      "runner": "rust/crates/pi-cli/tests/headless_smoke.rs",
+      "normalizers": [
+        "/runtime/temporaryRoot",
+        "/runtime/generatedTimestamp"
+      ],
+      "state": "verified"
     }
   ]
 }

@@ -1,5 +1,9 @@
 # Rust headless CLI milestone
 
+## Status
+
+Implementation and local verification completed on 2026-07-23. The archived provider, agent/tools, and data/resources dependencies are verified complete.
+
 ## Goal
 
 Compose the completed Rust provider, agent/tool, and data/resource layers into a Linux x64 `pi-rs` headless text/JSON CLI without changing the existing `pi` command.
@@ -17,11 +21,11 @@ Compose the completed Rust provider, agent/tool, and data/resource layers into a
 
 ## Acceptance Criteria
 
-- [ ] The release-mode `pi-rs` runs from outside the repository without Node.js; the injectable CLI library completes deterministic Faux text/JSON runs, while the production binary completes local mock-protocol text/JSON runs without a hidden Faux flag or endpoint.
-- [ ] Local-fixture runs cover all five milestone-1 protocols, tool calls, image input, retry, compaction, sessions, and cancellation.
-- [ ] Supported flags, output schemas, exit codes, stderr behavior, and unsupported-flag errors match the parent contract.
-- [ ] Existing `pi`, npm packages, and TypeScript CI remain unchanged and passing.
-- [ ] CI uploads a versioned Linux x64 `pi-rs` artifact with provenance/checksum metadata defined by the child design.
+- [x] The release-mode `pi-rs` runs from outside the repository without Node.js; the injectable CLI library completes deterministic Faux text/JSON runs, while the production binary completes local mock-protocol text/JSON runs without a hidden Faux flag or endpoint.
+- [x] Local-fixture runs cover all five milestone-1 protocols, tool calls, image input, retry, compaction, sessions, and cancellation.
+- [x] Supported flags, output schemas, exit codes, stderr behavior, and unsupported-flag errors match the parent contract.
+- [x] Existing `pi`, npm packages, and TypeScript CI remain unchanged and passing.
+- [x] CI uploads a versioned Linux x64 `pi-rs` artifact with provenance/checksum metadata defined by the child design.
 
 ## Out of Scope
 
@@ -31,3 +35,10 @@ Compose the completed Rust provider, agent/tool, and data/resource layers into a
 
 - Source of truth: `../07-17-rust-rewrite/prd.md`, `../07-17-rust-rewrite/design.md`, and `../07-17-rust-rewrite/implement.md`.
 - Directory hierarchy is not a dependency; all three upstream completion checks are mandatory.
+
+## Verification
+
+- Full locked Rust format, Clippy, all-target/all-feature tests, Rustdoc, and `cargo deny check` pass.
+- `npm run check` passes without modifying TypeScript sources, npm package bins, or release workflows.
+- The packaged GNU x64 binary runs help/version/model-list and loopback-provider text/JSON checks from outside the checkout with only isolated test paths and credentials.
+- Local release evidence: 15,086,832-byte x86-64 PIE, dynamically linked only to the GNU loader, `libgcc_s`, `libm`, and `libc`.

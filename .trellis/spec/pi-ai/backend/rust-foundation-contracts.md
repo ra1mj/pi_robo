@@ -331,3 +331,79 @@ let project_skills = discover_skills(SkillDiscoveryRequest {
 ```
 
 Keep context loading independent, and gate only protected project settings/skills. Do not describe trust as tool containment or a security sandbox.
+
+## Scenario: Headless CLI Composition and Linux Artifact
+
+### 1. Scope / Trigger
+
+Use this scenario when changing `pi-cli`, the `pi-rs` process boundary, headless argument/output behavior, production model-service registration, signal cleanup, or the Linux x64 Actions artifact. The CLI must compose completed Rust layers without reimplementing provider, agent, tool, store, or resource semantics.
+
+### 2. Signatures
+
+- Parse: `parse_args(&[String]) -> Result<CliArgs, CliParseError>`.
+- Mode: `resolve_output_mode(&CliArgs, stdin_is_terminal) -> Result<OutputMode, CliParseError>`.
+- Library entry: `run_cli(CliRequest, &dyn ModelServiceFactory, OutputTargets, &RootCancellation) -> CliExit`.
+- Production binary: `pi-rs`; Faux is injectable only through `ModelServiceFactory` in tests.
+- Artifact command: `rust/scripts/package-pi-rs.sh x86_64-unknown-linux-gnu <new-output-directory> <commit>`.
+
+### 3. Contracts
+
+- Initialization order is parse/metadata, global bootstrap, session selection, authoritative session cwd, trust, settings/models/auth/resources, model/runtime, then ordered prompts. Startup-project settings or skills must not leak into a resumed session from another cwd.
+- Production registers exactly `openai-completions`, `openai-responses`, `anthropic-messages`, and `google-generative-ai`. It has no Faux flag, provider, environment key, endpoint, or hidden binary route.
+- `HOME` and `PI_CODING_AGENT_DIR` select store roots. Built-in credentials use `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY`; `--api-key` is the in-memory highest-precedence override.
+- Text stdout is final assistant text only. JSON stdout starts with one v3 session header and then compact compatible events. Diagnostics and redacted failures use stderr.
+- `--approve` gates protected project settings/skills; it is not a tool sandbox. `--offline` disables implicit startup networking; it does not block the explicitly selected provider call.
+- The CI artifact job depends on the complete Rust check job and never changes the tag release workflow. It uploads `pi-rs-linux-x64-<commit>.tar.gz`, `SHA256SUMS`, and `build-info.json`.
+- Build info schema 1 contains `sourceCommit`, `workspaceVersion`, GNU x64 `target`, `release` profile, exact `rustc`/`cargo` versions, and the `Cargo.lock` SHA-256 digest.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Bare TTY or positional TTY invocation | Explicit interactive-mode guidance; do not silently select text |
+| Deferred current option or `--mode rpc` | `Unsupported` diagnostic with milestone guidance |
+| Unknown option | Distinct `Unknown` diagnostic |
+| Invalid/conflicting value, missing input file, or unsupported tool | Input failure on stderr; exit 1 |
+| Missing stored session cwd, legacy mutation, or stale writer | Actionable store error before a prompt |
+| Terminal failed/cancelled run | Terminal JSON event where applicable, stderr failure, exit 1 |
+| SIGHUP / SIGINT / SIGTERM | Cancel provider/tools, settle output/session work, exit 129 / 130 / 143 |
+| Existing artifact output directory or non-GNU-x64 target | Packaging fails closed without deleting the directory |
+| Artifact checksum/provenance mismatch | CI fails before upload |
+
+### 5. Good / Base / Bad Cases
+
+- Good: an extracted release binary runs text and JSON requests against a loopback custom provider from outside the checkout with no Node.js or Bun in `PATH`.
+- Good: resuming a session loads resources and executes tools relative to its stored cwd, not the startup cwd.
+- Base: `--help`, `--version`, and `--offline --list-models` require neither a writable session nor provider request.
+- Bad: adding a production `--faux` switch to make subprocess tests deterministic.
+- Bad: writing progress or Rust debug representations to stdout in text or JSON mode.
+- Bad: adding `pi-rs` to the tag publication workflow before the separate release decision.
+
+### 6. Tests Required
+
+- Parser/mode: `args_contract`, `mode_contract`; assert every supported alias, conflict, deferred option, unknown option, and precedence fixture.
+- Composition: `initialization_contract`, `input_contract`, `model_tool_contract`, `session_contract`, `output_contract`, and `signal_cleanup`.
+- End to end: `headless_smoke` injects Faux; `protocol_smoke` covers all four network protocols on `127.0.0.1`; `binary_protocol_smoke` executes the production binary in text/JSON; `no_node_runtime` clears `PATH`.
+- CI must format, run locked workspace Clippy/tests/Rustdoc/dependency audit, package release GNU x64, unpack outside the checkout, verify checksums/build info, and run the packaged binary protocol test.
+- Required repository gate remains `npm run check`; no live provider, credential, npm release, tag workflow, or public GitHub Release is part of this scenario.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```rust
+// A hidden production backdoor makes tests pass but changes the shipped surface.
+if args.provider.as_deref() == Some("faux") {
+    return run_with_faux(args).await;
+}
+```
+
+Correct:
+
+```rust
+// Tests inject the service boundary; the production binary supplies only the
+// four network protocol adapters.
+let exit = run_cli(request, injected_factory, targets, &cancellation).await;
+```
+
+Keep presentation and process behavior in `pi-cli`. Reuse canonical model, runtime, store, resource, and tool boundaries instead of duplicating their policies at the command layer.

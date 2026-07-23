@@ -45,6 +45,8 @@ jobs:
     name: Rust contracts
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -76,3 +78,50 @@ jobs:
 
       - name: Audit Rust dependencies
         run: cargo deny check
+
+  rust-linux-x64-artifact:
+    name: Rust Linux x64 artifact
+    needs: rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.97.0 --profile minimal
+          rustup default 1.97.0
+
+      - name: Package Linux x64 pi-rs
+        run: rust/scripts/package-pi-rs.sh x86_64-unknown-linux-gnu /tmp/pi-rs-artifacts "${GITHUB_SHA}"
+
+      - name: Smoke test packaged pi-rs outside checkout
+        run: |
+          set -euo pipefail
+
+          mkdir -p /tmp/pi-rs-smoke
+          tar -C /tmp/pi-rs-smoke -xzf "/tmp/pi-rs-artifacts/pi-rs-linux-x64-${GITHUB_SHA}.tar.gz"
+          cd /tmp/pi-rs-smoke
+          ./pi-rs --help
+          ./pi-rs --version
+          HOME=/tmp/pi-rs-smoke/home ./pi-rs --offline --list-models openai
+          cd /tmp/pi-rs-artifacts
+          sha256sum -c SHA256SUMS
+          grep -F "\"sourceCommit\": \"${GITHUB_SHA}\"" build-info.json
+          grep -F '"target": "x86_64-unknown-linux-gnu"' build-info.json
+
+      - name: Test packaged pi-rs local protocol modes
+        env:
+          PI_RS_SMOKE_BINARY: /tmp/pi-rs-smoke/pi-rs
+        run: cargo test -p pi-cli --test binary_protocol_smoke --locked
+
+      - name: Upload Linux x64 pi-rs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pi-rs-linux-x64-${{ github.sha }}
+          path: /tmp/pi-rs-artifacts/*
+          if-no-files-found: error
+          retention-days: 14

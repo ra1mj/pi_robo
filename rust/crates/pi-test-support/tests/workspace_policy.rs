@@ -58,6 +58,7 @@ fn workspace_dependency_boundaries_are_enforced() -> Result<(), Box<dyn Error>> 
     ]);
     let allowed_dev: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::from([
         ("pi-agent", BTreeSet::from(["pi-test-support"])),
+        ("pi-cli", BTreeSet::from(["pi-test-support"])),
         ("pi-provider", BTreeSet::from(["pi-test-support"])),
         ("pi-runtime", BTreeSet::from(["pi-test-support"])),
         ("pi-tools", BTreeSet::from(["pi-test-support"])),

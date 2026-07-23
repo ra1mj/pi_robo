@@ -3,7 +3,7 @@
   "name": "rust-headless-cli",
   "title": "Rust headless CLI milestone",
   "description": "Compose the Rust core into a side-by-side Linux x64 pi-rs text and JSON CLI artifact.",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
