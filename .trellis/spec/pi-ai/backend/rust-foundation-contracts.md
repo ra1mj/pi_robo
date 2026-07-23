@@ -186,6 +186,7 @@ Use this scenario when changing the Rust agent loop, tool contract, `read`/`bash
 - Canonical history retains image blocks. Requests to text-only models omit those blocks and add the explicit non-vision omission note.
 - `pi-tools` resolves relative paths from the supplied absolute cwd. Existing mutation targets use canonical keys; missing targets use normalized absolute keys. Mutation leases cover reads and writes.
 - Text/bash output uses the shared 2,000-line/50-KiB contract. Bash keeps a UTF-8-safe tail, writes full truncated output to a mode-`0600` temporary file, and kills the Linux process group on timeout/cancellation.
+- Bash progress updates contain the accumulated preview. Process exit is not proof that stdout/stderr reader tasks are exhausted: after draining and finishing the decoder, send any non-empty final preview that differs from the last emitted preview before returning the final tool output.
 - Image work runs on a blocking worker with decoder allocation/pixel limits. Supported input is JPEG, non-animated PNG, GIF, WebP, and validated BMP; BMP is normalized to PNG.
 - Retry belongs to `pi-runtime`: three retries by default, 2/4/8-second backoff, with canonical `retry_after_ms` overriding the calculated delay.
 - Threshold compaction runs after a completed response without starting another turn. Context overflow compacts and retries at most once. Run attempts and compaction records go through `SessionSink`.
@@ -197,6 +198,7 @@ Use this scenario when changing the Rust agent loop, tool contract, `read`/`bash
 | Unknown tool / malformed tool arguments | Source-ordered `ToolResultMessage` with `is_error = true` |
 | Tool call in a `length` response | Error tool result; do not invoke the tool |
 | Closed event receiver | `AgentRunError::EventSink`; never drop the event silently |
+| Shell exits before stdout/stderr reader messages are selected | Drain both pipes, finish decoding, and emit the missing final accumulated update before returning |
 | Cancelled model/tool/retry/compaction | Typed cancelled/aborted status; settle announced events and process cleanup |
 | Missing/unreadable path | `ToolErrorCategory::Execution` with the path and OS error |
 | Empty, missing, duplicate, no-op, or overlapping edit | Deterministic invalid/execution error; file remains unchanged |
@@ -209,16 +211,18 @@ Use this scenario when changing the Rust agent loop, tool contract, `read`/`bash
 ### 5. Good / Base / Bad Cases
 
 - Good: two parallel tools finish second-first, emit completion second-first, and append results first-second.
+- Good: a fast shell writes stdout and stderr, exits before either reader wins the scheduler race, and still emits a final update containing both streams.
 - Good: a BMP read returns explanatory text plus a canonical PNG image while respecting decode limits.
 - Base: a Faux text response emits one complete agent turn and persists through `InMemorySessionSink` without CLI or disk resources.
 - Bad: executing a partially streamed tool call after an output-limit stop.
+- Bad: draining late shell output into only the final result while leaving the last progress update stale or empty.
 - Bad: releasing a mutation lease when cancellation wins while an in-flight write can still complete.
 - Bad: implementing provider retry inside both an adapter and `pi-runtime`.
 
 ### 6. Tests Required
 
 - `pi-agent/tests/event_trace.rs`: single/multi-turn traces, parallel/source order, sequential override, invalid/unknown/length calls, images, non-vision filtering, cancellation, and delayed sink settlement.
-- `pi-tools` contract tests: path normalization, symlink mutation aliases, truncation, every supported image format, decoded-pixel bounds, read ranges/errors, bash late output/process trees, edit normalization/BOM/line endings/diffs, write permissions/symlink behavior, and captured TypeScript schemas.
+- `pi-tools` contract tests: path normalization, symlink mutation aliases, truncation, every supported image format, decoded-pixel bounds, read ranges/errors, bash late output/process trees, fast-exit stdout/stderr with the final recorded update containing both streams, edit normalization/BOM/line endings/diffs, write permissions/symlink behavior, and captured TypeScript schemas.
 - `pi-runtime` contract tests: bounded retry/backoff/retry-after/cancellation/exhaustion, threshold timing, summary/accounting, continued use, overflow retry-once, and in-memory persistence.
 - Fixture catalog rows may be `verified` only when their named runner passes. Required gates remain locked format/Clippy/tests, `cargo deny check`, and `npm run check`.
 
@@ -240,6 +244,24 @@ Correct:
 let completed = run_tools_in_parallel(calls).await;
 emit_completion_events_in_finish_order(&completed).await?;
 history.extend(sort_results_by_source_index(completed));
+```
+
+Wrong:
+
+```rust
+let status = child.wait().await?;
+drain_late_output(&mut receiver, &mut accumulator).await?;
+return final_output(status, accumulator);
+```
+
+Correct:
+
+```rust
+let status = child.wait().await?;
+drain_late_output(&mut receiver, &mut accumulator).await?;
+accumulator.finish()?;
+emit_if_changed(updates, accumulator.preview()).await?;
+return final_output(status, accumulator);
 ```
 
 Keep provider wire behavior in `pi-provider`, low-level turn ordering in `pi-agent`, filesystem/process behavior in `pi-tools`, and retry/compaction/session coordination in `pi-runtime`.

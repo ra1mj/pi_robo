@@ -173,6 +173,7 @@ async fn run_command(
     tokio::pin!(timeout_future);
     let mut accumulator = OutputAccumulator::new(config.temp_dir.clone());
     updates.send(json!({ "content": [] })).await?;
+    let mut last_update_preview = String::new();
     let mut output_open = true;
     let termination = loop {
         tokio::select! {
@@ -186,14 +187,16 @@ async fn run_command(
                         let decoded = accumulator.decode(&bytes);
                         if !decoded.is_empty() {
                             accumulator.push(&decoded)?;
+                            let preview = accumulator.preview();
                             if let Err(error) = updates.send(json!({
-                                "content": [{ "type": "text", "text": accumulator.preview() }]
+                                "content": [{ "type": "text", "text": preview }]
                             })).await {
                                 terminate_process_group(pid, &mut wait_task).await;
                                 stdout_task.abort();
                                 stderr_task.abort();
                                 return Err(error);
                             }
+                            last_update_preview = preview;
                         }
                     }
                     Some(Err(error)) => {
@@ -220,6 +223,14 @@ async fn run_command(
     stdout_task.abort();
     stderr_task.abort();
     accumulator.finish()?;
+    let final_preview = accumulator.preview();
+    if !final_preview.is_empty() && final_preview != last_update_preview {
+        updates
+            .send(json!({
+                "content": [{ "type": "text", "text": final_preview }]
+            }))
+            .await?;
+    }
     let snapshot = accumulator.snapshot();
     let (output, details) = format_snapshot(&snapshot);
 

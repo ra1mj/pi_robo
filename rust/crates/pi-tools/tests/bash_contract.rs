@@ -31,7 +31,14 @@ async fn streams_combined_output_and_applies_prefix_once() {
     let text = output_text(&output);
     assert!(text.contains("ready"));
     assert!(text.contains("stderr"));
-    assert!(updates.snapshot().len() >= 2);
+    let snapshots = updates.snapshot();
+    assert!(snapshots.len() >= 2);
+    let final_update = snapshots
+        .last()
+        .and_then(|snapshot| snapshot["content"][0]["text"].as_str())
+        .expect("final output update");
+    assert!(final_update.contains("ready"));
+    assert!(final_update.contains("stderr"));
 }
 
 #[tokio::test]
