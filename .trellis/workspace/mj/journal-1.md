@@ -204,3 +204,37 @@ Reproduced the Rust CI failure from a clean archive, identified the missing tsx 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: Fix Rust CI bash update race
+
+**Date**: 2026-07-23
+**Task**: Fix Rust CI bash update race
+**Branch**: `main`
+
+### Summary
+
+Exposed Rust workspace test failures in GitHub annotations, diagnosed the fast-process stdout/stderr scheduling race, flushed the final accumulated bash update, strengthened the regression contract, and verified CI run 29999779882 plus the Linux x64 artifact succeeded.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4fb5d410` | (see git log) |
+| `e384aa23` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
